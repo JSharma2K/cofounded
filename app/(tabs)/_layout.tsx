@@ -2,7 +2,7 @@ import { Tabs, useRouter } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { TouchableOpacity, Alert } from 'react-native';
 import { signOut } from '../../lib/api/auth';
-import { colors } from '../../utils/theme';
+import { colors, typography } from '../../utils/theme';
 
 export default function TabsLayout() {
   const router = useRouter();
@@ -47,7 +47,7 @@ export default function TabsLayout() {
       },
       headerTintColor: colors.text,
       headerTitleStyle: {
-        fontWeight: 'bold',
+        fontFamily: typography.fontFamilies.ui,
       },
       tabBarStyle: {
         backgroundColor: colors.surface,
@@ -55,6 +55,9 @@ export default function TabsLayout() {
       },
       tabBarActiveTintColor: colors.primary,
       tabBarInactiveTintColor: colors.textSecondary,
+      tabBarLabelStyle: {
+        fontFamily: typography.fontFamilies.ui,
+      },
     }}>
       <Tabs.Screen
         name="feed"

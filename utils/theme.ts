@@ -31,9 +31,11 @@ export const colors = {
 
 export const typography = {
   fontFamilies: {
-    regular: 'NeueMontreal-Regular',
-    medium: 'NeueMontreal-Medium',
-    bold: 'NeueMontreal-Bold',
+    // Josefin Sans ExtraLight (200) for everything
+    regular: 'JosefinSans-ExtraLight',
+    medium: 'JosefinSans-ExtraLight',
+    bold: 'JosefinSans-ExtraLight',
+    ui: 'JosefinSans-ExtraLight',
     // Fallback to system fonts if custom fonts aren't loaded
     systemRegular: 'System',
     systemBold: 'System',

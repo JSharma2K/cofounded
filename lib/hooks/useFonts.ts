@@ -8,9 +8,9 @@ export function useFonts() {
     async function loadFonts() {
       try {
         await Font.loadAsync({
-          'NeueMontreal-Regular': require('../../assets/fonts/NeueMontreal-Regular.otf'),
-          'NeueMontreal-Medium': require('../../assets/fonts/NeueMontreal-Medium.otf'),
-          'NeueMontreal-Bold': require('../../assets/fonts/NeueMontreal-Bold.otf'),
+          'JosefinSans-ExtraLight': require('../../assets/fonts/static/JosefinSans-ExtraLight.ttf'),
+          'JosefinSans-Light': require('../../assets/fonts/static/JosefinSans-Light.ttf'),
+          'JosefinSans-Regular': require('../../assets/fonts/static/JosefinSans-Regular.ttf'),
         });
         setFontsLoaded(true);
       } catch (error) {

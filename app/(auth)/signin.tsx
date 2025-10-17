@@ -61,7 +61,7 @@ export default function SignInScreen() {
         keyboardVerticalOffset={0}
       >
       <View style={styles.content}>
-        <Text style={styles.title}>Cofounded</Text>
+          <Text style={styles.title}>Co-founded</Text>
         <Text style={styles.subtitle}>
           Where ideas find their people.
         </Text>
@@ -173,8 +173,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: typography.fontSizes.displayLarge,
-    fontFamily: typography.fontFamilies.bold,
-    fontWeight: typography.fontWeights.bold,
+    fontFamily: typography.fontFamilies.ui,
     color: colors.primary,
     textAlign: 'center',
     marginBottom: spacing.sm,
@@ -182,7 +181,7 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: typography.fontSizes.lg,
-    fontWeight: typography.fontWeights.regular,
+    fontFamily: typography.fontFamilies.ui,
     color: colors.textSecondary,
     textAlign: 'center',
     marginBottom: spacing.xl,
@@ -190,7 +189,7 @@ const styles = StyleSheet.create({
   },
   helperText: {
     fontSize: typography.fontSizes.base,
-    fontWeight: typography.fontWeights.regular,
+    fontFamily: typography.fontFamilies.ui,
     color: colors.textSecondary,
     textAlign: 'center',
     marginBottom: spacing.lg,
@@ -224,7 +223,7 @@ const styles = StyleSheet.create({
   buttonText: {
     color: colors.text,
     fontSize: typography.fontSizes.lg,
-    fontWeight: typography.fontWeights.semibold,
+    fontFamily: typography.fontFamilies.ui,
   },
   changeEmailButton: {
     marginTop: spacing.lg,
@@ -233,7 +232,7 @@ const styles = StyleSheet.create({
   changeEmailText: {
     color: colors.textSecondary,
     fontSize: typography.fontSizes.base,
-    fontWeight: typography.fontWeights.medium,
+    fontFamily: typography.fontFamilies.ui,
   },
   messageContainer: {
     marginTop: spacing.lg,
@@ -246,7 +245,7 @@ const styles = StyleSheet.create({
   successMessage: {
     color: colors.success,
     fontSize: typography.fontSizes.sm,
-    fontWeight: typography.fontWeights.medium,
+    fontFamily: typography.fontFamilies.ui,
     textAlign: 'center',
   },
   snackbar: {

@@ -104,7 +104,7 @@ export default function FeedScreen() {
             style={[styles.actionButton, styles.passButton, swipeLoading && styles.actionButtonDisabled]}
             activeOpacity={0.8}
           >
-            <MaterialCommunityIcons name="close" size={32} color={colors.text} />
+            <MaterialCommunityIcons name="close" size={24} color={colors.text} />
             <RNText style={styles.actionButtonText}>Pass</RNText>
           </TouchableOpacity>
 
@@ -118,16 +118,12 @@ export default function FeedScreen() {
               <ActivityIndicator color={colors.text} size="small" />
             ) : (
               <>
-                <MaterialCommunityIcons name="heart" size={32} color={colors.text} />
+                <MaterialCommunityIcons name="heart" size={24} color={colors.text} />
                 <RNText style={styles.actionButtonText}>Like</RNText>
               </>
             )}
           </TouchableOpacity>
         </View>
-
-        <TouchableOpacity onPress={loadCandidates} style={styles.refreshSmallButton} activeOpacity={0.7}>
-          <MaterialCommunityIcons name="refresh" size={20} color={colors.textSecondary} />
-        </TouchableOpacity>
       </View>
 
       <Snackbar visible={!!error} onDismiss={() => setError('')} duration={4000} style={styles.errorSnackbar}>
@@ -193,14 +189,14 @@ const styles = StyleSheet.create({
   },
   emptyTitle: {
     fontSize: typography.fontSizes.xxl,
-    fontFamily: typography.fontFamilies.bold,
-    fontWeight: typography.fontWeights.bold,
+    fontFamily: typography.fontFamilies.ui,
     color: colors.text,
     marginTop: spacing.lg,
     textAlign: 'center',
   },
   emptySubtitle: {
     fontSize: typography.fontSizes.base,
+    fontFamily: typography.fontFamilies.ui,
     color: colors.textSecondary,
     textAlign: 'center',
     maxWidth: 280,
@@ -218,33 +214,34 @@ const styles = StyleSheet.create({
   },
   refreshButtonText: {
     fontSize: typography.fontSizes.base,
-    fontFamily: typography.fontFamilies.bold,
-    fontWeight: typography.fontWeights.bold,
+    fontFamily: typography.fontFamilies.ui,
     color: colors.text,
   },
   cardContainer: {
     flex: 1,
+    justifyContent: 'center',
+    paddingVertical: spacing.lg,
   },
   actionsContainer: {
-    padding: spacing.lg,
-    paddingBottom: spacing.xl,
-    backgroundColor: colors.surface,
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
+    padding: spacing.sm,
+    paddingBottom: spacing.sm,
+    backgroundColor: 'transparent',
   },
   actions: {
     flexDirection: 'row',
     justifyContent: 'center',
-    gap: spacing.xl,
-    marginBottom: spacing.md,
+    gap: spacing.md,
+    marginBottom: 0,
   },
   actionButton: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+    flexDirection: 'row',
+    paddingHorizontal: spacing.xl,
+    paddingVertical: spacing.md,
+    borderRadius: borderRadius.full,
     justifyContent: 'center',
     alignItems: 'center',
-    gap: spacing.xs,
+    gap: spacing.sm,
+    minWidth: 120,
     ...shadows.medium,
   },
   passButton: {
@@ -257,15 +254,9 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   actionButtonText: {
-    fontSize: typography.fontSizes.xs,
-    fontFamily: typography.fontFamilies.medium,
-    fontWeight: typography.fontWeights.semibold,
+    fontSize: typography.fontSizes.base,
+    fontFamily: typography.fontFamilies.ui,
     color: colors.text,
-    textTransform: 'uppercase',
-  },
-  refreshSmallButton: {
-    alignSelf: 'center',
-    padding: spacing.sm,
   },
   errorSnackbar: {
     backgroundColor: colors.error,
@@ -288,14 +279,14 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     fontSize: typography.fontSizes.display,
-    fontFamily: typography.fontFamilies.bold,
-    fontWeight: typography.fontWeights.bold,
+    fontFamily: typography.fontFamilies.ui,
     color: colors.text,
     marginTop: spacing.lg,
     marginBottom: spacing.sm,
   },
   modalSubtitle: {
     fontSize: typography.fontSizes.base,
+    fontFamily: typography.fontFamilies.ui,
     color: colors.textSecondary,
     textAlign: 'center',
     marginBottom: spacing.xl,
@@ -319,8 +310,7 @@ const styles = StyleSheet.create({
   },
   modalButtonPrimaryText: {
     fontSize: typography.fontSizes.lg,
-    fontFamily: typography.fontFamilies.bold,
-    fontWeight: typography.fontWeights.bold,
+    fontFamily: typography.fontFamilies.ui,
     color: colors.text,
   },
   modalButtonSecondary: {
@@ -335,8 +325,7 @@ const styles = StyleSheet.create({
   },
   modalButtonSecondaryText: {
     fontSize: typography.fontSizes.base,
-    fontFamily: typography.fontFamilies.medium,
-    fontWeight: typography.fontWeights.semibold,
+    fontFamily: typography.fontFamilies.ui,
     color: colors.textSecondary,
   },
 });

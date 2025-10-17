@@ -26,16 +26,19 @@ export function CandidateCard({ candidate }: CandidateCardProps) {
           <View style={styles.avatar}>
             <Text style={styles.avatarText}>{initials}</Text>
           </View>
+          <View style={styles.verificationBadge}>
+            <MaterialCommunityIcons name="check-decagram" size={16} color={colors.primary} />
+          </View>
         </View>
         
         <View style={styles.headerInfo}>
           <Text style={styles.name}>{user.display_name}</Text>
           <View style={styles.metaRow}>
-            <MaterialCommunityIcons name="cake-variant" size={14} color={colors.textSecondary} />
+            <MaterialCommunityIcons name="cake-variant" size={16} color={colors.textSecondary} />
             <Text style={styles.meta}>{user.age_band}</Text>
             <Text style={styles.separator}>•</Text>
-            <MaterialCommunityIcons name="map-marker" size={14} color={colors.textSecondary} />
-            <Text style={styles.meta}>{user.timezone.split('/')[1] || user.timezone}</Text>
+            <MaterialCommunityIcons name="map-marker" size={16} color={colors.textSecondary} />
+            <Text style={styles.meta} numberOfLines={1}>{(user.timezone.split('/')[1] || user.timezone).replace(/_/g, ' ')}</Text>
           </View>
         </View>
       </View>
@@ -118,57 +121,77 @@ const styles = StyleSheet.create({
     marginVertical: spacing.md,
     backgroundColor: colors.surface,
     borderRadius: borderRadius.xl,
+    borderWidth: 1,
+    borderColor: colors.borderLight,
     ...shadows.large,
     overflow: 'hidden',
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: spacing.lg,
-    backgroundColor: colors.surfaceLight,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    padding: spacing.xl,
+    backgroundColor: colors.background,
+    borderBottomWidth: 0,
   },
   avatarContainer: {
-    marginRight: spacing.md,
+    marginRight: spacing.lg,
+    position: 'relative',
   },
   avatar: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
+    width: 80,
+    height: 80,
+    borderRadius: 40,
     backgroundColor: colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
+    borderWidth: 3,
+    borderColor: colors.surface,
     ...shadows.medium,
   },
   avatarText: {
-    fontSize: typography.fontSizes.xxl,
-    fontFamily: typography.fontFamilies.bold,
-    fontWeight: typography.fontWeights.bold,
+    fontSize: typography.fontSizes.display,
+    fontFamily: typography.fontFamilies.regular,
     color: colors.text,
+  },
+  verificationBadge: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    backgroundColor: colors.surface,
+    borderRadius: 12,
+    width: 24,
+    height: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: colors.background,
   },
   headerInfo: {
     flex: 1,
+    justifyContent: 'center',
   },
   name: {
-    fontSize: typography.fontSizes.xl,
-    fontFamily: typography.fontFamilies.bold,
-    fontWeight: typography.fontWeights.bold,
+    fontSize: typography.fontSizes.xxl,
+    fontFamily: typography.fontFamilies.regular,
     color: colors.text,
-    marginBottom: spacing.xs,
+    marginBottom: spacing.sm,
+    letterSpacing: -0.5,
   },
   metaRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.xs,
+    flexShrink: 1,
   },
   meta: {
-    fontSize: typography.fontSizes.sm,
+    fontSize: typography.fontSizes.base,
+    fontFamily: typography.fontFamilies.regular,
     color: colors.textSecondary,
   },
   separator: {
-    fontSize: typography.fontSizes.sm,
-    color: colors.textTertiary,
+    fontSize: typography.fontSizes.base,
+    fontFamily: typography.fontFamilies.regular,
+    color: colors.textSecondary,
     marginHorizontal: spacing.xs,
   },
   scrollContent: {
@@ -186,14 +209,12 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: typography.fontSizes.base,
-    fontFamily: typography.fontFamilies.bold,
-    fontWeight: typography.fontWeights.bold,
+    fontFamily: typography.fontFamilies.regular,
     color: colors.text,
   },
   headline: {
     fontSize: typography.fontSizes.lg,
-    fontFamily: typography.fontFamilies.medium,
-    fontWeight: typography.fontWeights.semibold,
+    fontFamily: typography.fontFamilies.regular,
     color: colors.primary,
     lineHeight: typography.fontSizes.lg * typography.lineHeights.normal,
   },
@@ -219,14 +240,14 @@ const styles = StyleSheet.create({
   },
   infoLabel: {
     fontSize: typography.fontSizes.xs,
+    fontFamily: typography.fontFamilies.regular,
     color: colors.textTertiary,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   infoValue: {
     fontSize: typography.fontSizes.base,
-    fontFamily: typography.fontFamilies.bold,
-    fontWeight: typography.fontWeights.bold,
+    fontFamily: typography.fontFamilies.regular,
     color: colors.text,
     textTransform: 'capitalize',
   },
@@ -252,7 +273,7 @@ const styles = StyleSheet.create({
   },
   chipText: {
     fontSize: typography.fontSizes.sm,
-    fontFamily: typography.fontFamilies.medium,
+    fontFamily: typography.fontFamilies.regular,
     color: colors.text,
   },
 });
