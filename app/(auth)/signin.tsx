@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, StyleSheet, KeyboardAvoidingView, Platform, Text, TextInput as RNTextInput, TouchableOpacity, StatusBar } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, StyleSheet, KeyboardAvoidingView, Platform, Text, TextInput as RNTextInput, TouchableOpacity, StatusBar, Animated } from 'react-native';
 import { Snackbar } from 'react-native-paper';
 import { signInWithEmail, verifyOtp } from '../../lib/api/auth';
 import { colors, typography, spacing, borderRadius } from '../../utils/theme';
@@ -11,6 +11,26 @@ export default function SignInScreen() {
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [otpSent, setOtpSent] = useState(false);
+  
+  // Animation values
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const translateYAnim = useRef(new Animated.Value(-30)).current;
+
+  useEffect(() => {
+    // Float in animation for title
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 1000,
+        useNativeDriver: true,
+      }),
+      Animated.timing(translateYAnim, {
+        toValue: 0,
+        duration: 1000,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, []);
 
   const handleSendOtp = async () => {
     if (!email.trim()) {
@@ -61,7 +81,17 @@ export default function SignInScreen() {
         keyboardVerticalOffset={0}
       >
       <View style={styles.content}>
-          <Text style={styles.title}>Co-founded</Text>
+        <Animated.Text 
+          style={[
+            styles.title,
+            {
+              opacity: fadeAnim,
+              transform: [{ translateY: translateYAnim }],
+            },
+          ]}
+        >
+          Co-founded
+        </Animated.Text>
         <Text style={styles.subtitle}>
           Where ideas find their people.
         </Text>
