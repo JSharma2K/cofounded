@@ -1,0 +1,42 @@
+{
+  "expo": {
+    "name": "Cofounded",
+    "slug": "cofounded",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.cofounded.app"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "package": "com.cofounded.app"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-router"
+    ],
+    "scheme": "cofounded",
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "EXPO_PUBLIC_SUPABASE_URL": "https://lsdqxqdroftatikepbba.supabase.co",
+      "EXPO_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxzZHF4cWRyb2Z0YXRpa2VwYmJhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkzOTE2MDMsImV4cCI6MjA3NDk2NzYwM30.7OR8J_CB14wr5zBm-oLERwOmpyyIqI_a2tnifdI7yO0"
+    }
+  }
+}
+
