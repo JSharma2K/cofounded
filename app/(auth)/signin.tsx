@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, StyleSheet, KeyboardAvoidingView, Platform, Text, TextInput as RNTextInput, TouchableOpacity, StatusBar, Animated } from 'react-native';
 import { Snackbar } from 'react-native-paper';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { signInWithEmail, verifyOtp } from '../../lib/api/auth';
 import { colors, typography, spacing, borderRadius } from '../../utils/theme';
 
@@ -11,25 +12,75 @@ export default function SignInScreen() {
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [otpSent, setOtpSent] = useState(false);
+  const [emailFocused, setEmailFocused] = useState(false);
+  const [otpFocused, setOtpFocused] = useState(false);
   
   // Animation values
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const translateYAnim = useRef(new Animated.Value(-30)).current;
+  const titleFadeAnim = useRef(new Animated.Value(0)).current;
+  const titleTranslateYAnim = useRef(new Animated.Value(-30)).current;
+  const subtitleFadeAnim = useRef(new Animated.Value(0)).current;
+  const subtitleTranslateYAnim = useRef(new Animated.Value(-20)).current;
+  const formFadeAnim = useRef(new Animated.Value(0)).current;
+  const formTranslateYAnim = useRef(new Animated.Value(20)).current;
 
   useEffect(() => {
-    // Float in animation for title
-    Animated.parallel([
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 1000,
-        useNativeDriver: true,
-      }),
-      Animated.timing(translateYAnim, {
-        toValue: 0,
-        duration: 1000,
-        useNativeDriver: true,
-      }),
-    ]).start();
+    // Staggered animation sequence
+    const animationSequence = Animated.sequence([
+      // First: Title appears and floats up
+      Animated.parallel([
+        Animated.timing(titleFadeAnim, {
+          toValue: 1,
+          duration: 1200,
+          useNativeDriver: true,
+        }),
+        Animated.timing(titleTranslateYAnim, {
+          toValue: 0,
+          duration: 1200,
+          useNativeDriver: true,
+        }),
+      ]),
+      // Second: Subtitle appears and floats up (with delay)
+      Animated.parallel([
+        Animated.timing(subtitleFadeAnim, {
+          toValue: 1,
+          duration: 900,
+          useNativeDriver: true,
+        }),
+        Animated.timing(subtitleTranslateYAnim, {
+          toValue: 0,
+          duration: 900,
+          useNativeDriver: true,
+        }),
+      ]),
+      // Third: Title and subtitle float up together
+      Animated.parallel([
+        Animated.timing(titleTranslateYAnim, {
+          toValue: -20,
+          duration: 800,
+          useNativeDriver: true,
+        }),
+        Animated.timing(subtitleTranslateYAnim, {
+          toValue: -15,
+          duration: 800,
+          useNativeDriver: true,
+        }),
+      ]),
+      // Fourth: Form elements fade in from below
+      Animated.parallel([
+        Animated.timing(formFadeAnim, {
+          toValue: 1,
+          duration: 1000,
+          useNativeDriver: true,
+        }),
+        Animated.timing(formTranslateYAnim, {
+          toValue: 0,
+          duration: 1000,
+          useNativeDriver: true,
+        }),
+      ]),
+    ]);
+
+    animationSequence.start();
   }, []);
 
   const handleSendOtp = async () => {
@@ -85,24 +136,34 @@ export default function SignInScreen() {
           style={[
             styles.title,
             {
-              opacity: fadeAnim,
-              transform: [{ translateY: translateYAnim }],
+              opacity: titleFadeAnim,
+              transform: [{ translateY: titleTranslateYAnim }],
             },
           ]}
         >
           Co-founded
         </Animated.Text>
-        <Text style={styles.subtitle}>
+        <Animated.Text 
+          style={[
+            styles.subtitle,
+            {
+              opacity: subtitleFadeAnim,
+              transform: [{ translateY: subtitleTranslateYAnim }],
+            },
+          ]}
+        >
           Where ideas find their people.
-        </Text>
+        </Animated.Text>
 
-        {!otpSent && (
-          <Text style={styles.helperText}>
-            We'll send a secure one time code to your email.
-          </Text>
-        )}
-
-        <View style={styles.formContainer}>
+        <Animated.View 
+          style={[
+            styles.formContainer,
+            {
+              opacity: formFadeAnim,
+              transform: [{ translateY: formTranslateYAnim }],
+            },
+          ]}
+        >
           <RNTextInput
             placeholder="Email"
             placeholderTextColor={colors.textTertiary}
@@ -112,8 +173,10 @@ export default function SignInScreen() {
             keyboardType="email-address"
             autoCapitalize="none"
             autoComplete="email"
-            style={styles.input}
+            style={[styles.input, emailFocused && styles.inputFocused]}
             editable={!loading && !otpSent}
+            onFocus={() => setEmailFocused(true)}
+            onBlur={() => setEmailFocused(false)}
           />
 
           {!otpSent ? (
@@ -137,8 +200,10 @@ export default function SignInScreen() {
                 onChangeText={setOtp}
                 keyboardType="number-pad"
                 maxLength={6}
-                style={styles.input}
+                style={[styles.input, otpFocused && styles.inputFocused]}
                 editable={!loading}
+                onFocus={() => setOtpFocused(true)}
+                onBlur={() => setOtpFocused(false)}
               />
               <TouchableOpacity
                 style={[styles.button, loading && styles.buttonDisabled]}
@@ -166,10 +231,11 @@ export default function SignInScreen() {
 
           {message && (
             <View style={styles.messageContainer}>
+              <MaterialCommunityIcons name="check-circle" size={20} color={colors.text} />
               <Text style={styles.successMessage}>{message}</Text>
             </View>
           )}
-        </View>
+        </Animated.View>
       </View>
       </KeyboardAvoidingView>
 
@@ -239,20 +305,27 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
   },
+  inputFocused: {
+    borderColor: colors.primary,
+    backgroundColor: colors.surface,
+  },
   button: {
-    backgroundColor: colors.accent,
+    backgroundColor: colors.primary,
     borderRadius: borderRadius.md,
-    paddingVertical: spacing.md + 2,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.lg,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: spacing.sm,
+    alignSelf: 'center',
+    minWidth: 120,
   },
   buttonDisabled: {
     opacity: 0.6,
   },
   buttonText: {
     color: colors.text,
-    fontSize: typography.fontSizes.lg,
+    fontSize: typography.fontSizes.base,
     fontFamily: typography.fontFamilies.ui,
   },
   changeEmailButton: {
@@ -266,17 +339,25 @@ const styles = StyleSheet.create({
   },
   messageContainer: {
     marginTop: spacing.lg,
-    padding: spacing.md,
-    backgroundColor: colors.surfaceLight,
-    borderRadius: borderRadius.sm,
-    borderLeftWidth: 3,
-    borderLeftColor: colors.success,
+    padding: spacing.lg,
+    backgroundColor: colors.primary,
+    borderRadius: borderRadius.lg,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+    gap: spacing.sm,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 4,
   },
   successMessage: {
-    color: colors.success,
-    fontSize: typography.fontSizes.sm,
+    color: colors.text,
+    fontSize: typography.fontSizes.base,
     fontFamily: typography.fontFamilies.ui,
     textAlign: 'center',
+    fontWeight: '500',
   },
   snackbar: {
     backgroundColor: colors.error,

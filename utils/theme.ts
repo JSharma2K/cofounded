@@ -6,9 +6,9 @@ export const colors = {
   primaryLight: '#F4B5A8',
   
   // Dark theme colors
-  background: '#1A1D23', // Dark background
-  surface: '#252930', // Slightly lighter surface for cards/inputs
-  surfaceLight: '#2E3139',
+  background: '#000000', // Pure black background
+  surface: '#1A1A1A', // Dark gray surface for cards/inputs
+  surfaceLight: '#2A2A2A',
   
   // Text colors
   text: '#FFFFFF',

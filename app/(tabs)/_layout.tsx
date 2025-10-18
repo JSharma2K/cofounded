@@ -71,9 +71,9 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="matches"
         options={{
-          title: 'Matches',
+          title: 'Connections',
           tabBarIcon: ({ color, size }) => (
-            <MaterialCommunityIcons name="heart-multiple" size={size} color={color} />
+            <MaterialCommunityIcons name="handshake" size={size} color={color} />
           ),
         }}
       />
