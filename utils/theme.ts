@@ -31,11 +31,13 @@ export const colors = {
 
 export const typography = {
   fontFamilies: {
-    // Josefin Sans ExtraLight (200) for everything
-    regular: 'JosefinSans-ExtraLight',
-    medium: 'JosefinSans-ExtraLight',
-    bold: 'JosefinSans-ExtraLight',
-    ui: 'JosefinSans-ExtraLight',
+    // Josefin Sans Light (300) for all text except title
+    regular: 'JosefinSans-Light',
+    medium: 'JosefinSans-Light',
+    bold: 'JosefinSans-Light',
+    ui: 'JosefinSans-Light',
+    // Keep ExtraLight for title screen only
+    title: 'JosefinSans-ExtraLight',
     // Fallback to system fonts if custom fonts aren't loaded
     systemRegular: 'System',
     systemBold: 'System',

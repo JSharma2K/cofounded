@@ -33,8 +33,8 @@ export default function OnboardingLayout() {
   };
 
   const LogoutButton = () => (
-    <TouchableOpacity onPress={handleLogout} style={{ marginRight: 16 }}>
-      <MaterialCommunityIcons name="logout" size={24} color={colors.text} />
+    <TouchableOpacity onPress={handleLogout} style={{ marginRight: 8, padding: 4 }}>
+      <MaterialCommunityIcons name="exit-to-app" size={20} color={colors.textSecondary} />
     </TouchableOpacity>
   );
 

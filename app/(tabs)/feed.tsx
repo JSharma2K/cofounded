@@ -90,41 +90,40 @@ export default function FeedScreen() {
 
   const currentCandidate = candidates[0];
 
-  return (
-    <View style={styles.container}>
-      <View style={styles.cardContainer}>
-        <CandidateCard candidate={currentCandidate} />
-      </View>
+      return (
+        <View style={styles.container}>
+          <View style={styles.cardContainer}>
+            <CandidateCard candidate={currentCandidate} />
+          </View>
 
-      <View style={styles.actionsContainer}>
-        <View style={styles.actions}>
-          <TouchableOpacity
-            onPress={() => handleSwipe(currentCandidate.user.id, 'pass')}
-            disabled={swipeLoading}
-            style={[styles.actionButton, styles.passButton, swipeLoading && styles.actionButtonDisabled]}
-            activeOpacity={0.8}
-          >
-            <MaterialCommunityIcons name="close" size={24} color={colors.text} />
-            <RNText style={styles.actionButtonText}>Pass</RNText>
-          </TouchableOpacity>
+          {/* Buttons positioned below card */}
+          <View style={styles.actionsContainer}>
+            <TouchableOpacity
+              onPress={() => handleSwipe(currentCandidate.user.id, 'pass')}
+              disabled={swipeLoading}
+              style={[styles.actionButton, styles.passButton, swipeLoading && styles.actionButtonDisabled]}
+              activeOpacity={0.8}
+            >
+              <MaterialCommunityIcons name="close" size={24} color={colors.text} />
+              <RNText style={styles.actionButtonText}>Pass</RNText>
+            </TouchableOpacity>
 
-          <TouchableOpacity
-            onPress={() => handleSwipe(currentCandidate.user.id, 'like')}
-            disabled={swipeLoading}
-            style={[styles.actionButton, styles.likeButton, swipeLoading && styles.actionButtonDisabled]}
-            activeOpacity={0.8}
-          >
-            {swipeLoading ? (
-              <ActivityIndicator color={colors.text} size="small" />
-            ) : (
-              <>
-                <MaterialCommunityIcons name="heart" size={24} color={colors.text} />
-                <RNText style={styles.actionButtonText}>Like</RNText>
-              </>
-            )}
-          </TouchableOpacity>
-        </View>
-      </View>
+            <TouchableOpacity
+              onPress={() => handleSwipe(currentCandidate.user.id, 'like')}
+              disabled={swipeLoading}
+              style={[styles.actionButton, styles.likeButton, swipeLoading && styles.actionButtonDisabled]}
+              activeOpacity={0.8}
+            >
+              {swipeLoading ? (
+                <ActivityIndicator color={colors.text} size="small" />
+              ) : (
+                <>
+                    <MaterialCommunityIcons name="thumb-up" size={24} color={colors.text} />
+                  <RNText style={styles.actionButtonText}>Like</RNText>
+                </>
+              )}
+            </TouchableOpacity>
+          </View>
 
       <Snackbar visible={!!error} onDismiss={() => setError('')} duration={4000} style={styles.errorSnackbar}>
         {error}
@@ -223,25 +222,21 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.lg,
   },
   actionsContainer: {
-    padding: spacing.sm,
-    paddingBottom: spacing.sm,
-    backgroundColor: 'transparent',
-  },
-  actions: {
     flexDirection: 'row',
-    justifyContent: 'center',
-    gap: spacing.md,
-    marginBottom: 0,
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    backgroundColor: 'transparent',
   },
   actionButton: {
     flexDirection: 'row',
-    paddingHorizontal: spacing.xl,
+    paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
     borderRadius: borderRadius.full,
     justifyContent: 'center',
     alignItems: 'center',
     gap: spacing.sm,
-    minWidth: 120,
+    minWidth: 100,
     ...shadows.medium,
   },
   passButton: {
@@ -257,6 +252,7 @@ const styles = StyleSheet.create({
     fontSize: typography.fontSizes.base,
     fontFamily: typography.fontFamilies.ui,
     color: colors.text,
+    fontWeight: '600',
   },
   errorSnackbar: {
     backgroundColor: colors.error,

@@ -95,10 +95,10 @@ export default function ChatScreen() {
     >
       {messages.length === 0 ? (
         <View style={styles.centered}>
-          <MaterialCommunityIcons name="chat-outline" size={64} color={colors.textTertiary} />
-          <RNText style={styles.emptyTitle}>Start the conversation!</RNText>
+          <MaterialCommunityIcons name="message-text-outline" size={48} color={colors.textTertiary} />
+          <RNText style={styles.emptyTitle}>Start the conversation</RNText>
           <Text variant="bodyMedium" style={styles.emptyText}>
-            Say hello and start building something amazing together 👋
+            Say hello and start building something amazing together
           </Text>
         </View>
       ) : (
@@ -164,13 +164,13 @@ const styles = StyleSheet.create({
   },
   emptyTitle: {
     fontSize: typography.fontSizes.xl,
-    fontFamily: typography.fontFamilies.bold,
-    fontWeight: typography.fontWeights.bold,
+    fontFamily: typography.fontFamilies.regular,
     color: colors.text,
     marginTop: spacing.md,
   },
   emptyText: {
     fontSize: typography.fontSizes.base,
+    fontFamily: typography.fontFamilies.regular,
     color: colors.textSecondary,
     textAlign: 'center',
     maxWidth: 260,
