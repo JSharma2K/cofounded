@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, FlatList, ActivityIndicator, TouchableOpacity, Text as RNText, Dimensions } from 'react-native';
+import { View, StyleSheet, FlatList, ActivityIndicator, TouchableOpacity, Text as RNText, Dimensions, Animated } from 'react-native';
 import { Text } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -26,6 +26,11 @@ export default function LikesScreen() {
   const [likes, setLikes] = useState<LikeWithUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [matchSuccess, setMatchSuccess] = useState<string | null>(null);
+  const [showMatchAnimation, setShowMatchAnimation] = useState(false);
+  const [matchAnimation] = useState(new Animated.Value(0));
+  const [heartScale] = useState(new Animated.Value(1));
+  const [heartRotation] = useState(new Animated.Value(0));
 
   const loadLikes = async () => {
     if (!user) return;
@@ -54,7 +59,7 @@ export default function LikesScreen() {
       }
 
       // Get user IDs who liked the current user
-      const userIds = swipes.map(swipe => swipe.user_id);
+      const userIds = swipes.map(swipe => swipe.swiper_id);
       
       // Fetch user data and profiles
       const [usersRes, profilesRes] = await Promise.all([
@@ -69,14 +74,24 @@ export default function LikesScreen() {
       const profilesMap = new Map(profilesRes.data?.map((p: Profile) => [p.user_id, p]) || []);
 
       // Combine swipe data with user data
-      const likesWithUsers: LikeWithUser[] = swipes.map(swipe => ({
-        id: swipe.id,
-        user_id: swipe.user_id,
-        target_id: swipe.target_id,
-        created_at: swipe.created_at,
-        user: usersMap.get(swipe.user_id)!,
-        profile: profilesMap.get(swipe.user_id) || null,
-      }));
+      const likesWithUsers: LikeWithUser[] = swipes
+        .map(swipe => {
+          const user = usersMap.get(swipe.swiper_id);
+          if (!user) {
+            console.warn('User not found for swiper_id:', swipe.swiper_id);
+            return null;
+          }
+          
+          return {
+            id: swipe.id,
+            user_id: swipe.swiper_id,
+            target_id: swipe.target_id,
+            created_at: swipe.created_at,
+            user: user,
+            profile: profilesMap.get(swipe.swiper_id) || null,
+          };
+        })
+        .filter((item): item is LikeWithUser => item !== null);
 
       setLikes(likesWithUsers);
     } catch (err: any) {
@@ -91,25 +106,144 @@ export default function LikesScreen() {
     loadLikes();
   }, [user]);
 
+  const triggerMatchAnimation = () => {
+    console.log('=== ANIMATION TRIGGER START ===');
+    console.log('Current showMatchAnimation state:', showMatchAnimation);
+    console.log('Setting showMatchAnimation to true');
+    
+    setShowMatchAnimation(true);
+    console.log('showMatchAnimation set to true');
+    
+    // Reset animation values
+    console.log('Resetting animation values');
+    matchAnimation.setValue(0);
+    heartScale.setValue(1);
+    heartRotation.setValue(0);
+    
+    // Animate the match overlay
+    Animated.parallel([
+      Animated.timing(matchAnimation, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+      Animated.sequence([
+        Animated.timing(heartScale, {
+          toValue: 1.3,
+          duration: 200,
+          useNativeDriver: true,
+        }),
+        Animated.timing(heartScale, {
+          toValue: 1,
+          duration: 200,
+          useNativeDriver: true,
+        }),
+      ]),
+      Animated.timing(heartRotation, {
+        toValue: 1,
+        duration: 600,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      // Hide animation after 3 seconds to ensure it's visible
+      setTimeout(() => {
+        setShowMatchAnimation(false);
+        router.push('/(tabs)/matches');
+      }, 3000);
+    });
+  };
+
   const handleLikeBack = async (targetUserId: string) => {
     if (!user) return;
 
-    try {
-      // Create a like swipe back to the user who liked you
-      const { error } = await supabase
-        .from('swipes')
-        .insert({
-          user_id: user.id,
-          target_id: targetUserId,
-          direction: 'like',
-        });
+    console.log('=== LIKE BACK START ===');
+    console.log('Target user ID:', targetUserId);
+    console.log('Current user ID:', user.id);
+    console.log('Current likes count:', likes.length);
 
-      if (error) throw error;
+    try {
+      // Check if you've already swiped on this user
+      const { data: existingSwipe, error: checkError } = await supabase
+        .from('swipes')
+        .select('id, direction')
+        .eq('swiper_id', user.id)
+        .eq('target_id', targetUserId)
+        .single();
+
+      if (checkError && checkError.code !== 'PGRST116') {
+        throw checkError;
+      }
+
+      // If no existing swipe, create one
+      if (!existingSwipe) {
+        const { error: swipeError } = await supabase
+          .from('swipes')
+          .insert({
+            swiper_id: user.id,
+            target_id: targetUserId,
+            direction: 'like',
+          });
+
+        if (swipeError) throw swipeError;
+      } else if (existingSwipe.direction === 'pass') {
+        // If you previously passed, update to like
+        const { error: updateError } = await supabase
+          .from('swipes')
+          .update({ direction: 'like' })
+          .eq('id', existingSwipe.id);
+
+        if (updateError) throw updateError;
+      }
+      // If already liked, continue with match creation
+
+      // Check if this creates a match (both users liked each other)
+      const { data: existingMatch, error: matchCheckError } = await supabase
+        .from('matches')
+        .select('id')
+        .or(`and(user_a.eq.${user.id},user_b.eq.${targetUserId}),and(user_a.eq.${targetUserId},user_b.eq.${user.id})`)
+        .single();
+
+      if (matchCheckError && matchCheckError.code !== 'PGRST116') {
+        throw matchCheckError;
+      }
+
+      // If no existing match, create one
+      if (!existingMatch) {
+        console.log('Creating new match between', user.id, 'and', targetUserId);
+        const { error: matchError } = await supabase
+          .from('matches')
+          .insert({
+            user_a: user.id,
+            user_b: targetUserId,
+            reason: { type: 'mutual_like' }
+          });
+
+        if (matchError) {
+          console.error('Match creation error:', matchError);
+          throw matchError;
+        }
+        console.log('Match created successfully');
+      } else {
+        console.log('Match already exists');
+      }
 
       // Remove from likes list
-      setLikes(prev => prev.filter(like => like.user_id !== targetUserId));
+      console.log('Removing user from likes list:', targetUserId);
+      setLikes(prev => {
+        const newLikes = prev.filter(like => like.user_id !== targetUserId);
+        console.log('Likes after removal:', newLikes.length);
+        return newLikes;
+      });
       
-      // TODO: Check if this creates a match and handle accordingly
+      console.log('About to trigger match animation for user:', targetUserId);
+      console.log('Current showMatchAnimation state:', showMatchAnimation);
+      
+      // Small delay to ensure state is set before animation
+      setTimeout(() => {
+        triggerMatchAnimation();
+      }, 100);
+      
+      console.log('=== LIKE BACK END ===');
     } catch (err: any) {
       console.error('Failed to like back:', err);
       setError(err.message || 'Failed to like back');
@@ -143,6 +277,11 @@ export default function LikesScreen() {
   }
 
   const renderLikeCard = ({ item }: { item: LikeWithUser }) => {
+    if (!item.user || !item.user.display_name) {
+      console.warn('Missing user data for item:', item);
+      return null;
+    }
+    
     const initials = item.user.display_name
       .split(' ')
       .map((n) => n[0])
@@ -194,8 +333,52 @@ export default function LikesScreen() {
     );
   };
 
+  console.log('Render - showMatchAnimation:', showMatchAnimation);
+  console.log('Render - likes count:', likes.length);
+  
   return (
     <View style={styles.container}>
+      {showMatchAnimation && (
+        <Animated.View 
+          style={[
+            styles.matchAnimationOverlay,
+            {
+              opacity: matchAnimation,
+              transform: [
+                {
+                  scale: matchAnimation.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [0.8, 1],
+                  }),
+                },
+              ],
+            },
+          ]}
+        >
+          <View style={styles.matchAnimationContent}>
+            <Animated.View
+              style={[
+                styles.matchHeart,
+                {
+                  transform: [
+                    { scale: heartScale },
+                    {
+                      rotate: heartRotation.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: ['0deg', '360deg'],
+                      }),
+                    },
+                  ],
+                },
+              ]}
+            >
+              <MaterialCommunityIcons name="thumb-up" size={80} color={colors.primary} />
+            </Animated.View>
+            <RNText style={styles.matchAnimationTitle}>It's a Match!</RNText>
+            <RNText style={styles.matchAnimationSubtitle}>You both liked each other</RNText>
+          </View>
+        </Animated.View>
+      )}
       <FlatList
         data={likes}
         renderItem={renderLikeCard}
@@ -359,5 +542,53 @@ const styles = StyleSheet.create({
     fontFamily: typography.fontFamilies.ui,
     color: colors.text,
     fontWeight: '600',
+  },
+  matchSuccess: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.primary,
+    margin: spacing.md,
+    padding: spacing.md,
+    borderRadius: borderRadius.lg,
+    gap: spacing.sm,
+  },
+  matchSuccessText: {
+    fontSize: typography.fontSizes.base,
+    fontFamily: typography.fontFamilies.ui,
+    color: colors.text,
+    fontWeight: '600',
+  },
+  matchAnimationOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1000,
+  },
+  matchAnimationContent: {
+    alignItems: 'center',
+    padding: spacing.xl,
+  },
+  matchHeart: {
+    marginBottom: spacing.lg,
+  },
+  matchAnimationTitle: {
+    fontSize: typography.fontSizes.xxl,
+    fontFamily: typography.fontFamilies.ui,
+    color: colors.text,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: spacing.sm,
+  },
+  matchAnimationSubtitle: {
+    fontSize: typography.fontSizes.base,
+    fontFamily: typography.fontFamilies.ui,
+    color: colors.textSecondary,
+    textAlign: 'center',
   },
 });

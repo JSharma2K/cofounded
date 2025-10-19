@@ -138,7 +138,7 @@ export default function FeedScreen() {
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <MaterialCommunityIcons name="heart-circle" size={80} color={colors.primary} />
+            <MaterialCommunityIcons name="thumb-up" size={80} color={colors.primary} />
             
             <RNText style={styles.modalTitle}>It's a Match!</RNText>
             <RNText style={styles.modalSubtitle}>

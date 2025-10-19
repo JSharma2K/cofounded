@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, FlatList, ActivityIndicator, TouchableOpacity, Text as RNText, Dimensions } from 'react-native';
 import { Text } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { useSession } from '../../lib/hooks/useSession';
 import { getMatches, getOtherUser } from '../../lib/api/matches';
 import type { MatchWithUsers } from '../../lib/types';
@@ -45,6 +45,15 @@ export default function MatchesScreen() {
   useEffect(() => {
     loadMatches();
   }, [user]);
+
+  // Refresh matches when screen comes into focus
+  useFocusEffect(
+    React.useCallback(() => {
+      if (user) {
+        loadMatches();
+      }
+    }, [user])
+  );
 
   if (loading) {
     return (
