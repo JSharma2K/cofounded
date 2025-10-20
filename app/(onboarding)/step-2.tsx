@@ -15,6 +15,7 @@ export default function Step2Screen() {
   const { user } = useSession();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [focused, setFocused] = useState<null | 'headline' | 'bio' | 'commitment'>(null);
 
   const {
     control,
@@ -70,8 +71,9 @@ export default function Step2Screen() {
                 placeholderTextColor={colors.textTertiary}
                 value={value}
                 onChangeText={onChange}
-                onBlur={onBlur}
-                style={[styles.input, errors.headline && styles.inputError]}
+                onFocus={() => setFocused('headline')}
+                onBlur={() => setFocused(null)}
+                style={[styles.input, focused === 'headline' && styles.inputFocused, errors.headline && styles.inputError]}
               />
             )}
           />
@@ -88,10 +90,11 @@ export default function Step2Screen() {
                 placeholderTextColor={colors.textTertiary}
                 value={value}
                 onChangeText={onChange}
-                onBlur={onBlur}
+                onFocus={() => setFocused('bio')}
+                onBlur={() => setFocused(null)}
                 multiline
                 numberOfLines={4}
-                style={[styles.inputMultiline, errors.bio && styles.inputError]}
+                style={[styles.inputMultiline, focused === 'bio' && styles.inputFocused, errors.bio && styles.inputError]}
               />
             )}
           />
@@ -176,16 +179,32 @@ export default function Step2Screen() {
             control={control}
             name="stage"
             render={({ field: { onChange, value } }) => (
-              <SegmentedButtons
-                value={value}
-                onValueChange={onChange}
-                buttons={[
+              <View style={[styles.segmented, styles.stageRow]}>
+                {[
                   { value: 'idea', label: 'Idea' },
                   { value: 'prototype', label: 'Prototype' },
                   { value: 'launched', label: 'Launched' },
-                ]}
-                style={styles.segmented}
-              />
+                ].map((btn) => (
+                  <TouchableOpacity
+                    key={btn.value}
+                    onPress={() => onChange(btn.value as any)}
+                    style={[
+                      styles.stageChip,
+                      value === btn.value && styles.stageChipSelected,
+                    ]}
+                    activeOpacity={0.85}
+                  >
+                    <Text
+                      style={[
+                        styles.stageChipText,
+                        value === btn.value && styles.stageChipTextSelected,
+                      ]}
+                    >
+                      {btn.label}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
             )}
           />
 
@@ -194,15 +213,17 @@ export default function Step2Screen() {
             control={control}
             name="commitment_hours"
             render={({ field: { onChange, onBlur, value } }) => (
-              <RNTextInput
-                placeholder="Hours per week you can commit (e.g., 10, 20, 40)"
-                placeholderTextColor={colors.textTertiary}
-                value={String(value)}
-                onChangeText={(text) => onChange(parseInt(text) || 0)}
-                onBlur={onBlur}
-                keyboardType="number-pad"
-                style={[styles.input, errors.commitment_hours && styles.inputError]}
-              />
+              <View style={[styles.commitRow, focused === 'commitment' && styles.inputFocused, errors.commitment_hours && styles.inputError]}> 
+                <RNTextInput
+                  value={String(value)}
+                  onChangeText={(text) => onChange(parseInt(text) || 0)}
+                  onFocus={() => setFocused('commitment')}
+                  onBlur={() => setFocused(null)}
+                  keyboardType="number-pad"
+                  style={[styles.commitInput]}
+                />
+                <Text style={styles.commitUnit}>hrs</Text>
+              </View>
             )}
           />
           {errors.commitment_hours && (
@@ -249,8 +270,7 @@ const styles = StyleSheet.create({
   },
   heading: {
     fontSize: typography.fontSizes.xxl,
-    fontFamily: typography.fontFamilies.bold,
-    fontWeight: typography.fontWeights.bold,
+    fontFamily: typography.fontFamilies.regular,
     color: colors.text,
     marginBottom: spacing.xl,
   },
@@ -268,6 +288,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.md,
     fontSize: typography.fontSizes.base,
+    fontFamily: typography.fontFamilies.regular,
     color: colors.text,
     marginTop: spacing.md,
     marginBottom: spacing.sm,
@@ -280,6 +301,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.md,
     fontSize: typography.fontSizes.base,
+    fontFamily: typography.fontFamilies.regular,
     color: colors.text,
     marginTop: spacing.md,
     marginBottom: spacing.sm,
@@ -288,8 +310,37 @@ const styles = StyleSheet.create({
     minHeight: 100,
     textAlignVertical: 'top',
   },
+  commitRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.sm,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  commitInput: {
+    flex: 1,
+    fontSize: typography.fontSizes.sm,
+    fontFamily: typography.fontFamilies.regular,
+    color: colors.text,
+  },
+  commitUnit: {
+    marginLeft: spacing.xs,
+    fontSize: typography.fontSizes.sm,
+    fontFamily: typography.fontFamilies.regular,
+    color: colors.textSecondary,
+  },
   inputError: {
     borderColor: colors.error,
+  },
+  inputFocused: {
+    borderColor: colors.primary,
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.5,
+    shadowRadius: 6,
   },
   errorText: {
     color: colors.error,
@@ -299,6 +350,35 @@ const styles = StyleSheet.create({
   },
   segmented: {
     marginBottom: spacing.md,
+  },
+  stageRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+  },
+  stageChip: {
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.full,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  stageChipSelected: {
+    borderColor: colors.primary,
+    backgroundColor: colors.surface,
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.5,
+    shadowRadius: 6,
+  },
+  stageChipText: {
+    color: colors.textSecondary,
+    fontSize: typography.fontSizes.sm,
+    fontFamily: typography.fontFamilies.regular,
+  },
+  stageChipTextSelected: {
+    color: colors.text,
   },
   chipContainer: {
     flexDirection: 'row',
@@ -316,19 +396,19 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   chipSelected: {
-    backgroundColor: colors.accent,
-    borderColor: colors.accent,
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
   },
   chipText: {
     color: colors.textSecondary,
     fontSize: typography.fontSizes.sm,
-    fontFamily: typography.fontFamilies.medium,
+    fontFamily: typography.fontFamilies.regular,
   },
   chipTextSelected: {
     color: colors.text,
   },
   button: {
-    backgroundColor: colors.accent,
+    backgroundColor: colors.primary,
     borderRadius: borderRadius.md,
     paddingVertical: spacing.md + 2,
     alignItems: 'center',
@@ -341,8 +421,7 @@ const styles = StyleSheet.create({
   buttonText: {
     color: colors.text,
     fontSize: typography.fontSizes.lg,
-    fontFamily: typography.fontFamilies.medium,
-    fontWeight: typography.fontWeights.semibold,
+    fontFamily: typography.fontFamilies.regular,
   },
   snackbar: {
     backgroundColor: colors.error,
