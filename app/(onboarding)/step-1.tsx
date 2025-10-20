@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, Text, TextInput as RNTextInput, TouchableOpacity } from 'react-native';
-import { Snackbar, SegmentedButtons } from 'react-native-paper';
+import { Snackbar } from 'react-native-paper';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -16,6 +17,9 @@ export default function Step1Screen() {
   const { user } = useSession();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [focusedField, setFocusedField] = useState<null | 'display_name' | 'timezone' | 'age'>(null);
+  const [age, setAge] = useState<number>(23);
+  const [ageText, setAgeText] = useState<string>('23');
 
   const {
     control,
@@ -38,7 +42,9 @@ export default function Step1Screen() {
     setError('');
 
     try {
-      await updateUserInfo(user.id, data);
+      // Map numeric age to existing age_band for backend compatibility
+      const computedAgeBand = age <= 18 ? '16-18' : age <= 22 ? '19-22' : age <= 26 ? '23-26' : '27+';
+      await updateUserInfo(user.id, { ...data, age_band: computedAgeBand });
       router.push('/(onboarding)/step-2');
     } catch (err: any) {
       setError(err.message || 'Failed to save');
@@ -65,8 +71,16 @@ export default function Step1Screen() {
                 placeholderTextColor={colors.textTertiary}
                 value={value}
                 onChangeText={onChange}
-                onBlur={onBlur}
-                style={[styles.input, errors.display_name && styles.inputError]}
+                onFocus={() => setFocusedField('display_name')}
+                onBlur={() => {
+                  onBlur();
+                  setFocusedField(null);
+                }}
+                style={[
+                  styles.input,
+                  focusedField === 'display_name' && styles.inputFocused,
+                  errors.display_name && styles.inputError,
+                ]}
               />
             )}
           />
@@ -74,24 +88,66 @@ export default function Step1Screen() {
             <Text style={styles.errorText}>{errors.display_name.message}</Text>
           )}
 
-          <Text style={styles.label}>Age Range</Text>
-          <Controller
-            control={control}
-            name="age_band"
-            render={({ field: { onChange, value } }) => (
-              <SegmentedButtons
-                value={value}
-                onValueChange={onChange}
-                buttons={[
-                  { value: '16-18', label: '16-18' },
-                  { value: '19-22', label: '19-22' },
-                  { value: '23-26', label: '23-26' },
-                  { value: '27+', label: '27+' },
-                ]}
-                style={styles.segmented}
+          <Text style={styles.label}>Age</Text>
+          <View style={styles.ageRow}>
+            <TouchableOpacity
+              accessibilityLabel="Decrease age"
+              onPress={() => {
+                setAge((a) => {
+                  const next = Math.max(16, a - 1);
+                  setAgeText(String(next));
+                  return next;
+                });
+              }}
+              style={styles.ageButton}
+              activeOpacity={0.8}
+            >
+              <MaterialCommunityIcons name="minus" size={22} color={colors.primary} />
+            </TouchableOpacity>
+
+            <View style={styles.ageValueContainer}>
+              <RNTextInput
+                value={ageText}
+                onChangeText={(txt) => {
+                  const cleaned = txt.replace(/[^0-9]/g, '');
+                  // Allow empty while typing
+                  setAgeText(cleaned);
+                }}
+                onFocus={() => setFocusedField('age')}
+                onBlur={() => {
+                  setFocusedField(null);
+                  if (ageText === '') {
+                    // Restore previous valid value
+                    setAgeText(String(age));
+                    return;
+                  }
+                  const num = Math.min(80, Math.max(16, parseInt(ageText, 10)));
+                  setAge(num);
+                  setAgeText(String(num));
+                }}
+                keyboardType="number-pad"
+                maxLength={2}
+                style={[styles.ageInput, focusedField === 'age' && styles.inputFocused]}
+                placeholder="Age"
+                placeholderTextColor={colors.textTertiary}
               />
-            )}
-          />
+            </View>
+
+            <TouchableOpacity
+              accessibilityLabel="Increase age"
+              onPress={() => {
+                setAge((a) => {
+                  const next = Math.min(80, a + 1);
+                  setAgeText(String(next));
+                  return next;
+                });
+              }}
+              style={styles.ageButton}
+              activeOpacity={0.8}
+            >
+              <MaterialCommunityIcons name="plus" size={22} color={colors.primary} />
+            </TouchableOpacity>
+          </View>
 
           <Controller
             control={control}
@@ -102,8 +158,16 @@ export default function Step1Screen() {
                 placeholderTextColor={colors.textTertiary}
                 value={value}
                 onChangeText={onChange}
-                onBlur={onBlur}
-                style={[styles.input, errors.timezone && styles.inputError]}
+                onFocus={() => setFocusedField('timezone')}
+                onBlur={() => {
+                  onBlur();
+                  setFocusedField(null);
+                }}
+                style={[
+                  styles.input,
+                  focusedField === 'timezone' && styles.inputFocused,
+                  errors.timezone && styles.inputError,
+                ]}
               />
             )}
           />
@@ -183,15 +247,13 @@ const styles = StyleSheet.create({
   },
   heading: {
     fontSize: typography.fontSizes.xxl,
-    fontFamily: typography.fontFamilies.bold,
-    fontWeight: typography.fontWeights.bold,
+    fontFamily: typography.fontFamilies.regular,
     color: colors.text,
     marginBottom: spacing.xl,
   },
   label: {
     fontSize: typography.fontSizes.base,
-    fontFamily: typography.fontFamilies.medium,
-    fontWeight: typography.fontWeights.medium,
+    fontFamily: typography.fontFamilies.regular,
     color: colors.textSecondary,
     marginTop: spacing.lg,
     marginBottom: spacing.md,
@@ -202,11 +264,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.md,
     fontSize: typography.fontSizes.base,
+    fontFamily: typography.fontFamilies.regular,
     color: colors.text,
     marginTop: spacing.md,
     marginBottom: spacing.sm,
     borderWidth: 1,
     borderColor: colors.border,
+  },
+  inputFocused: {
+    borderColor: colors.primary,
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.5,
+    shadowRadius: 6,
   },
   inputError: {
     borderColor: colors.error,
@@ -219,6 +289,41 @@ const styles = StyleSheet.create({
   },
   segmented: {
     marginBottom: spacing.md,
+  },
+  ageRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: spacing.lg,
+    marginBottom: spacing.md,
+  },
+  ageButton: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  ageValueContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: spacing.xs,
+    borderRadius: borderRadius.md,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  ageInput: {
+    width: '100%',
+    textAlign: 'center',
+    fontSize: typography.fontSizes.lg,
+    fontFamily: typography.fontFamilies.regular,
+    color: colors.text,
+    paddingVertical: spacing.xs,
   },
   chipContainer: {
     flexDirection: 'row',
@@ -236,19 +341,19 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   chipSelected: {
-    backgroundColor: colors.accent,
-    borderColor: colors.accent,
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
   },
   chipText: {
     color: colors.textSecondary,
     fontSize: typography.fontSizes.sm,
-    fontFamily: typography.fontFamilies.medium,
+    fontFamily: typography.fontFamilies.regular,
   },
   chipTextSelected: {
     color: colors.text,
   },
   button: {
-    backgroundColor: colors.accent,
+    backgroundColor: colors.primary,
     borderRadius: borderRadius.md,
     paddingVertical: spacing.md + 2,
     alignItems: 'center',
@@ -261,8 +366,7 @@ const styles = StyleSheet.create({
   buttonText: {
     color: colors.text,
     fontSize: typography.fontSizes.lg,
-    fontFamily: typography.fontFamilies.medium,
-    fontWeight: typography.fontWeights.semibold,
+    fontFamily: typography.fontFamilies.regular,
   },
   snackbar: {
     backgroundColor: colors.error,

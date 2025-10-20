@@ -2,7 +2,7 @@ import { Stack, useRouter } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { TouchableOpacity, Alert } from 'react-native';
 import { signOut } from '../../lib/api/auth';
-import { colors } from '../../utils/theme';
+import { colors, typography } from '../../utils/theme';
 
 export default function OnboardingLayout() {
   const router = useRouter();
@@ -49,7 +49,7 @@ export default function OnboardingLayout() {
         },
         headerTintColor: colors.text,
         headerTitleStyle: {
-          fontWeight: 'bold',
+          fontFamily: typography.fontFamilies.regular,
         },
       }}
     >
