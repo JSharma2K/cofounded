@@ -89,7 +89,7 @@ export async function ensureUserRecord(userId: string) {
   const { error } = await supabase.from('users').insert({
     id: userId,
     display_name: 'User',
-    age_band: '19-22',
+    age: 25, // Default age
     timezone,
     languages: ['English'],
     verification_tier: 0,

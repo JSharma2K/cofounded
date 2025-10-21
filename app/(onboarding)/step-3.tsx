@@ -50,11 +50,11 @@ export default function Step3Screen() {
     >
       <ScrollView style={styles.scroll}>
         <View style={styles.content}>
-          <Text variant="headlineSmall" style={styles.heading}>
+          <Text style={styles.heading}>
             What are you looking for?
           </Text>
 
-          <Text variant="labelLarge" style={styles.label}>
+          <Text style={styles.label}>
             I'm seeking a...
           </Text>
           <Controller
@@ -69,6 +69,9 @@ export default function Step3Screen() {
                   { value: 'teammate', label: 'Teammate' },
                   { value: 'mentor', label: 'Mentor' },
                 ]}
+                style={styles.segmented}
+                buttonStyle={styles.segmentedButton}
+                labelStyle={styles.segmentedLabel}
               />
             )}
           />
@@ -170,11 +173,20 @@ const styles = StyleSheet.create({
   errorText: {
     color: colors.error,
     fontSize: typography.fontSizes.sm,
+    fontFamily: typography.fontFamilies.regular,
     marginTop: spacing.xs,
     marginBottom: spacing.sm,
   },
   segmented: {
     marginBottom: spacing.md,
+  },
+  segmentedButton: {
+    backgroundColor: colors.surface,
+  },
+  segmentedLabel: {
+    fontFamily: typography.fontFamilies.medium,
+    fontSize: typography.fontSizes.base,
+    color: colors.text,
   },
   button: {
     backgroundColor: colors.accent,

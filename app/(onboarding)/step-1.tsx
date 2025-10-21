@@ -29,7 +29,7 @@ export default function Step1Screen() {
     resolver: zodResolver(userInfoSchema),
     defaultValues: {
       display_name: '',
-      age_band: '19-22',
+      age: 23,
       timezone: Localization.getCalendars()[0]?.timeZone || 'UTC',
       languages: ['English'],
     },
@@ -42,9 +42,7 @@ export default function Step1Screen() {
     setError('');
 
     try {
-      // Map numeric age to existing age_band for backend compatibility
-      const computedAgeBand = age <= 18 ? '16-18' : age <= 22 ? '19-22' : age <= 26 ? '23-26' : '27+';
-      await updateUserInfo(user.id, { ...data, age_band: computedAgeBand });
+      await updateUserInfo(user.id, { ...data, age });
       router.push('/(onboarding)/step-2');
     } catch (err: any) {
       setError(err.message || 'Failed to save');
@@ -94,7 +92,7 @@ export default function Step1Screen() {
               accessibilityLabel="Decrease age"
               onPress={() => {
                 setAge((a) => {
-                  const next = Math.max(16, a - 1);
+                  const next = Math.max(0, a - 1);
                   setAgeText(String(next));
                   return next;
                 });
@@ -121,7 +119,7 @@ export default function Step1Screen() {
                     setAgeText(String(age));
                     return;
                   }
-                  const num = Math.min(80, Math.max(16, parseInt(ageText, 10)));
+                  const num = Math.min(100, Math.max(0, parseInt(ageText, 10)));
                   setAge(num);
                   setAgeText(String(num));
                 }}
@@ -137,7 +135,7 @@ export default function Step1Screen() {
               accessibilityLabel="Increase age"
               onPress={() => {
                 setAge((a) => {
-                  const next = Math.min(80, a + 1);
+                  const next = Math.min(100, a + 1);
                   setAgeText(String(next));
                   return next;
                 });
@@ -341,8 +339,12 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   chipSelected: {
-    backgroundColor: colors.primary,
+    backgroundColor: colors.surface,
     borderColor: colors.primary,
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.5,
+    shadowRadius: 6,
   },
   chipText: {
     color: colors.textSecondary,
@@ -354,11 +356,16 @@ const styles = StyleSheet.create({
   },
   button: {
     backgroundColor: colors.primary,
-    borderRadius: borderRadius.md,
-    paddingVertical: spacing.md + 2,
+    borderRadius: borderRadius.full,
+    paddingVertical: spacing.md,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: spacing.xl,
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
   },
   buttonDisabled: {
     opacity: 0.6,

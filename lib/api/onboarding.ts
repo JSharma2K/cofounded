@@ -8,7 +8,7 @@ export async function updateUserInfo(userId: string, data: UserInfoForm) {
     .upsert({
       id: userId,
       display_name: data.display_name,
-      age_band: data.age_band,
+      age: data.age,
       timezone: data.timezone,
       languages: data.languages,
       verification_tier: 0, // Default verification tier
@@ -44,6 +44,7 @@ export async function upsertProfile(userId: string, data: ProfileForm) {
       user_id: userId,
       headline: data.headline,
       bio: data.bio,
+      business_domains: data.business_domains,
       domains: data.domains,
       skills: data.skills,
       stage: data.stage,

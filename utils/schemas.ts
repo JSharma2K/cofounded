@@ -3,7 +3,7 @@ import { z } from 'zod';
 // Onboarding Step 1: User Info
 export const userInfoSchema = z.object({
   display_name: z.string().min(2, 'Name must be at least 2 characters').max(50),
-  age_band: z.enum(['16-18', '19-22', '23-26', '27+']),
+  age: z.number().min(0, 'Age must be at least 0').max(100, 'Age must be at most 100'),
   timezone: z.string().min(1, 'Timezone is required'),
   languages: z.array(z.string()).min(1, 'Select at least one language'),
 });
@@ -12,8 +12,9 @@ export type UserInfoForm = z.infer<typeof userInfoSchema>;
 
 // Onboarding Step 2: Profile
 export const profileSchema = z.object({
-  headline: z.string().max(100, 'Headline too long').optional(),
+  headline: z.string().max(2500, 'Business description too long').optional(),
   bio: z.string().max(500, 'Bio must be under 500 characters').optional(),
+  business_domains: z.array(z.string()).min(1, 'Select at least one business domain'),
   domains: z.array(z.string()).min(1, 'Select at least one domain'),
   skills: z.array(z.string()).min(1, 'Select at least one skill'),
   stage: z.enum(['idea', 'prototype', 'launched']),
