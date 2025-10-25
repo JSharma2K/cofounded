@@ -25,7 +25,7 @@ export type ProfileForm = z.infer<typeof profileSchema>;
 
 // Onboarding Step 3: Intent
 export const intentSchema = z.object({
-  seeking: z.enum(['cofounder', 'teammate', 'mentor']),
+  seeking: z.enum(['cofounder', 'teammate', 'mentor', 'investor']),
   availability_text: z.string().max(200).optional(),
 });
 

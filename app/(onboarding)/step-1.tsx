@@ -55,9 +55,15 @@ export default function Step1Screen() {
     <KeyboardAvoidingView
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
     >
-      <ScrollView style={styles.scroll}>
-        <View style={styles.content}>
+      <View style={styles.scroll}>
+        <ScrollView 
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.content}>
           <Text style={styles.heading}>Tell us about yourself</Text>
 
           <Controller
@@ -179,6 +185,7 @@ export default function Step1Screen() {
                 {LANGUAGES.map((lang) => (
                   <TouchableOpacity
                     key={lang}
+                    activeOpacity={0.7}
                     onPress={() => {
                       if (value.includes(lang)) {
                         onChange(value.filter((l) => l !== lang));
@@ -208,17 +215,19 @@ export default function Step1Screen() {
             <Text style={styles.errorText}>{errors.languages.message}</Text>
           )}
 
-          <TouchableOpacity
-            style={[styles.button, loading && styles.buttonDisabled]}
-            onPress={handleSubmit(onSubmit)}
-            disabled={loading}
-          >
-            <Text style={styles.buttonText}>
-              {loading ? 'Saving...' : 'Continue'}
-            </Text>
-          </TouchableOpacity>
         </View>
-      </ScrollView>
+        </ScrollView>
+        
+        <TouchableOpacity
+          style={[styles.button, loading && styles.buttonDisabled]}
+          onPress={handleSubmit(onSubmit)}
+          disabled={loading}
+        >
+          <Text style={styles.buttonText}>
+            {loading ? 'Saving...' : 'Continue'}
+          </Text>
+        </TouchableOpacity>
+      </View>
 
       <Snackbar
         visible={!!error}
@@ -239,6 +248,12 @@ const styles = StyleSheet.create({
   },
   scroll: {
     flex: 1,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
   },
   content: {
     padding: spacing.lg,
@@ -327,32 +342,36 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: spacing.sm,
-    marginTop: spacing.sm,
+    marginTop: spacing.md,
+    justifyContent: 'flex-start',
   },
   chip: {
     backgroundColor: colors.surface,
     borderRadius: borderRadius.full,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
     borderWidth: 1,
     borderColor: colors.border,
-    marginBottom: spacing.sm,
+    marginBottom: spacing.xs,
+    width: 85, // Increased width to fit longer names
+    height: 32, // Fixed height for consistent size
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   chipSelected: {
-    backgroundColor: colors.surface,
-    borderColor: colors.primary,
-    shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.5,
-    shadowRadius: 6,
+    backgroundColor: colors.surface, // Keep same background
+    borderColor: colors.primary,    // Only coral outline
+    borderWidth: 2,                 // Thicker border when selected
   },
   chipText: {
     color: colors.textSecondary,
-    fontSize: typography.fontSizes.sm,
+    fontSize: 11, // Slightly smaller to fit better
     fontFamily: typography.fontFamilies.regular,
+    textAlign: 'center',
   },
   chipTextSelected: {
-    color: colors.text,
+    color: colors.primary, // Coral text when selected
+    fontWeight: '500',
   },
   button: {
     backgroundColor: colors.primary,
@@ -360,7 +379,7 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: spacing.xl,
+    margin: spacing.lg,
     shadowColor: colors.primary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
