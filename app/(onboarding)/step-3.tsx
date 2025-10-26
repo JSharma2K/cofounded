@@ -36,6 +36,7 @@ export default function Step2Screen() {
       skills: [],
       stage: 'idea',
       commitment_hours: 20,
+      availability_text: '',
     },
   });
 
@@ -404,6 +405,27 @@ export default function Step2Screen() {
           />
           {errors.commitment_hours && (
             <Text style={styles.errorText}>{errors.commitment_hours.message}</Text>
+          )}
+
+          <Text style={styles.label}>Availability Details (Optional)</Text>
+          <Controller
+            control={control}
+            name="availability_text"
+            render={({ field: { onChange, onBlur, value } }) => (
+              <RNTextInput
+                placeholder="E.g., Available evenings and weekends, flexible schedule, etc."
+                placeholderTextColor={colors.textTertiary}
+                value={value}
+                onChangeText={onChange}
+                onBlur={onBlur}
+                multiline
+                numberOfLines={3}
+                style={[styles.inputMultiline, errors.availability_text && styles.inputError]}
+              />
+            )}
+          />
+          {errors.availability_text && (
+            <Text style={styles.errorText}>{errors.availability_text.message}</Text>
           )}
 
           <TouchableOpacity

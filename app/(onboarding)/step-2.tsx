@@ -5,7 +5,7 @@ import { useRouter } from 'expo-router';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { intentSchema, type IntentForm } from '../../utils/schemas';
-import { upsertIntent } from '../../lib/api/onboarding';
+import { upsertIntent, updateUserRole } from '../../lib/api/onboarding';
 import { useSession } from '../../lib/hooks/useSession';
 import { colors, typography, spacing, borderRadius } from '../../utils/theme';
 
@@ -24,7 +24,6 @@ export default function Step3Screen() {
     resolver: zodResolver(intentSchema),
     defaultValues: {
       seeking: 'cofounder',
-      availability_text: '',
     },
   });
 
@@ -35,6 +34,9 @@ export default function Step3Screen() {
     setError('');
 
     try {
+      // Store the user role in the database
+      await updateUserRole(user.id, userRole);
+      
       // For investors and mentors, set seeking to their role
       const intentData = {
         ...data,
@@ -61,98 +63,93 @@ export default function Step3Screen() {
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <ScrollView style={styles.scroll}>
-        <View style={styles.content}>
-          <Text style={styles.heading}>
-            What are you looking for?
-          </Text>
-
-          <Text style={styles.label}>
-            What are you joining the app as?
-          </Text>
-          <View style={styles.roleContainer}>
-            {[
-              { value: 'cofounder', label: 'Cofounder' },
-              { value: 'teammate', label: 'Teammate' },
-              { value: 'mentor', label: 'Mentor' },
-              { value: 'investor', label: 'Investor' },
-            ].map((role) => (
-              <TouchableOpacity
-                key={role.value}
-                style={[
-                  styles.roleButton,
-                  userRole === role.value && styles.roleButtonSelected,
-                ]}
-                onPress={() => setUserRole(role.value as any)}
-                activeOpacity={0.7}
-              >
-                <Text style={[
-                  styles.roleButtonText,
-                  userRole === role.value && styles.roleButtonTextSelected,
-                ]}>
-                  {role.label}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-
-          {userRole === 'cofounder' || userRole === 'teammate' ? (
-            <>
-              <Text style={styles.label}>
-                I'm seeking a...
-              </Text>
-              <Controller
-                control={control}
-                name="seeking"
-                render={({ field: { onChange, value } }) => (
-                  <SegmentedButtons
-                    value={value}
-                    onValueChange={onChange}
-                    buttons={[
-                      { value: 'cofounder', label: 'Cofounder' },
-                      { value: 'teammate', label: 'Teammate' },
-                      { value: 'mentor', label: 'Mentor' },
-                    ]}
-                    style={styles.segmented}
-                    buttonStyle={styles.segmentedButton}
-                    labelStyle={styles.segmentedLabel}
-                  />
-                )}
-              />
-            </>
-          ) : null}
-
-          <Controller
-            control={control}
-            name="availability_text"
-            render={({ field: { onChange, onBlur, value } }) => (
-              <RNTextInput
-                placeholder="Availability (optional) - E.g., Available evenings and weekends..."
-                placeholderTextColor={colors.textTertiary}
-                value={value}
-                onChangeText={onChange}
-                onBlur={onBlur}
-                multiline
-                numberOfLines={3}
-                style={[styles.inputMultiline, errors.availability_text && styles.inputError]}
-              />
-            )}
-          />
-          {errors.availability_text && (
-            <Text style={styles.errorText}>{errors.availability_text.message}</Text>
-          )}
-
-          <TouchableOpacity
-            style={[styles.button, loading && styles.buttonDisabled]}
-            onPress={handleSubmit(onSubmit)}
-            disabled={loading}
-          >
-            <Text style={styles.buttonText}>
-              {loading ? 'Saving...' : 'Continue'}
+      <View style={styles.scroll}>
+        <ScrollView style={styles.scrollView}>
+          <View style={styles.content}>
+            <Text style={styles.heading}>
+              What are you looking for?
             </Text>
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
+
+            <Text style={styles.label}>
+              What are you joining the app as?
+            </Text>
+            <View style={styles.roleContainer}>
+              {[
+                { value: 'cofounder', label: 'Cofounder' },
+                { value: 'teammate', label: 'Teammate' },
+                { value: 'mentor', label: 'Mentor' },
+                { value: 'investor', label: 'Investor' },
+              ].map((role) => (
+                <TouchableOpacity
+                  key={role.value}
+                  style={[
+                    styles.roleButton,
+                    userRole === role.value && styles.roleButtonSelected,
+                  ]}
+                  onPress={() => setUserRole(role.value as any)}
+                  activeOpacity={0.7}
+                >
+                  <Text style={[
+                    styles.roleButtonText,
+                    userRole === role.value && styles.roleButtonTextSelected,
+                  ]}>
+                    {role.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            {userRole === 'cofounder' || userRole === 'teammate' ? (
+              <>
+                <Text style={styles.label}>
+                  I'm seeking a...
+                </Text>
+                <Controller
+                  control={control}
+                  name="seeking"
+                  render={({ field: { onChange, value } }) => (
+                    <View style={styles.roleContainer}>
+                      {[
+                        { value: 'cofounder', label: 'Cofounder' },
+                        { value: 'teammate', label: 'Teammate' },
+                        { value: 'mentor', label: 'Mentor' },
+                        { value: 'investor', label: 'Investor' },
+                      ].map((option) => (
+                        <TouchableOpacity
+                          key={option.value}
+                          style={[
+                            styles.roleButton,
+                            value === option.value && styles.roleButtonSelected,
+                          ]}
+                          onPress={() => onChange(option.value)}
+                          activeOpacity={0.7}
+                        >
+                          <Text style={[
+                            styles.roleButtonText,
+                            value === option.value && styles.roleButtonTextSelected,
+                          ]}>
+                            {option.label}
+                          </Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  )}
+                />
+              </>
+            ) : null}
+          </View>
+        </ScrollView>
+        
+        <TouchableOpacity
+          style={[styles.button, loading && styles.buttonDisabled]}
+          onPress={handleSubmit(onSubmit)}
+          disabled={loading}
+        >
+          <Text style={styles.buttonText}>
+            {loading ? 'Saving...' : 'Continue'}
+          </Text>
+        </TouchableOpacity>
+      </View>
 
       <Snackbar visible={!!error} onDismiss={() => setError('')} duration={4000}>
         {error}
@@ -167,6 +164,9 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   scroll: {
+    flex: 1,
+  },
+  scrollView: {
     flex: 1,
   },
   content: {
@@ -243,7 +243,10 @@ const styles = StyleSheet.create({
   roleButtonSelected: {
     backgroundColor: colors.surface,
     borderColor: colors.primary,
-    borderWidth: 2,
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.5,
+    shadowRadius: 6,
   },
   roleButtonText: {
     color: colors.textSecondary,
@@ -255,30 +258,22 @@ const styles = StyleSheet.create({
     color: colors.primary,
     fontWeight: '500',
   },
-  segmented: {
-    marginBottom: spacing.md,
-  },
-  segmentedButton: {
-    backgroundColor: colors.surface,
-  },
-  segmentedLabel: {
-    fontFamily: typography.fontFamilies.medium,
-    fontSize: typography.fontSizes.base,
-    color: colors.text,
-  },
   button: {
-    backgroundColor: colors.accent,
-    borderRadius: borderRadius.md,
+    backgroundColor: colors.primary, // #E89B8E - Consistent coral theme color
+    borderRadius: 25, // Pill shape
     paddingVertical: spacing.md + 2,
+    paddingHorizontal: spacing.xl,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: spacing.xl,
+    marginHorizontal: spacing.lg,
+    marginBottom: spacing.lg,
+    marginTop: spacing.md,
   },
   buttonDisabled: {
     opacity: 0.6,
   },
   buttonText: {
-    color: colors.text,
+    color: '#FFFFFF', // White text for coral background
     fontSize: typography.fontSizes.lg,
     fontFamily: typography.fontFamilies.medium,
     fontWeight: typography.fontWeights.semibold,

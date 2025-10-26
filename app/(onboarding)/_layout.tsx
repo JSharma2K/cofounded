@@ -56,6 +56,15 @@ export default function OnboardingLayout() {
       <Stack.Screen name="step-1" options={{ title: 'About You' }} />
       <Stack.Screen name="step-2" options={{ title: 'Your Profile' }} />
       <Stack.Screen name="step-3" options={{ title: 'What You Seek' }} />
+      <Stack.Screen 
+        name="step-4" 
+        options={({ route }) => {
+          const role = route.params?.role;
+          return {
+            title: role === 'investor' ? 'Investor Profile' : 'Mentor Profile'
+          };
+        }} 
+      />
     </Stack>
   );
 }

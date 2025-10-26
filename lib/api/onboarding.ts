@@ -1,5 +1,5 @@
 import { supabase } from '../supabase';
-import type { UserInfoForm, ProfileForm, IntentForm } from '../../utils/schemas';
+import type { UserInfoForm, ProfileForm, IntentForm, ExpertiseForm } from '../../utils/schemas';
 
 export async function updateUserInfo(userId: string, data: UserInfoForm) {
   console.log('[updateUserInfo] Upserting user info for:', userId);
@@ -49,6 +49,7 @@ export async function upsertProfile(userId: string, data: ProfileForm) {
       skills: data.skills,
       stage: data.stage,
       commitment_hours: data.commitment_hours,
+      availability_text: data.availability_text,
     }, { onConflict: 'user_id' });
 
   if (error) {
@@ -56,6 +57,20 @@ export async function upsertProfile(userId: string, data: ProfileForm) {
     throw error;
   }
   console.log('[upsertProfile] Success');
+}
+
+export async function updateUserRole(userId: string, userRole: string) {
+  console.log('[updateUserRole] Updating user role for:', userId, 'to:', userRole);
+  const { error } = await supabase
+    .from('users')
+    .update({ user_role: userRole })
+    .eq('id', userId);
+
+  if (error) {
+    console.error('[updateUserRole] Error:', error);
+    throw error;
+  }
+  console.log('[updateUserRole] Success');
 }
 
 export async function upsertIntent(userId: string, data: IntentForm) {
@@ -68,5 +83,38 @@ export async function upsertIntent(userId: string, data: IntentForm) {
     }, { onConflict: 'user_id' });
 
   if (error) throw error;
+}
+
+export async function upsertExpertise(userId: string, data: ExpertiseForm & { 
+  experience_level?: string | null;
+  investment_type?: string | null;
+  portfolio_size?: string | null;
+  portfolio_url?: string | null;
+}) {
+  console.log('[upsertExpertise] Upserting expertise for user:', userId);
+  
+  // Clear investor-specific fields if not an investor
+  const isInvestor = data.seeking === 'investor';
+  
+  const { error } = await supabase
+    .from('intents')
+    .upsert({
+      user_id: userId,
+      seeking: data.seeking,
+      availability_text: data.availability_text,
+      expertise_areas: data.expertise_areas,
+      experience_level: data.experience_level,
+      // Only save investor fields if user is an investor, otherwise set to null
+      investment_type: isInvestor ? data.investment_type : null,
+      portfolio_size: isInvestor ? data.portfolio_size : null,
+      portfolio_url: isInvestor ? data.portfolio_url : null,
+    }, { onConflict: 'user_id' });
+
+  if (error) {
+    console.error('[upsertExpertise] Error:', error);
+    throw error;
+  }
+  
+  console.log('[upsertExpertise] Success');
 }
 

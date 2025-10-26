@@ -66,13 +66,18 @@ export default function MatchesScreen() {
   if (matches.length === 0) {
     return (
       <View style={styles.centered}>
-        <MaterialCommunityIcons name="heart-outline" size={80} color={colors.textTertiary} />
-        <Text variant="titleLarge" style={styles.emptyTitle}>
+        <View style={styles.emptyIconContainer}>
+          <MaterialCommunityIcons name="handshake" size={80} color={colors.background} />
+          <View style={styles.emptyIconOutline}>
+            <MaterialCommunityIcons name="handshake-outline" size={80} color={colors.primary} />
+          </View>
+        </View>
+        <RNText style={styles.emptyTitle}>
           No connections yet
-        </Text>
-        <Text variant="bodyMedium" style={styles.emptySubtitle}>
+        </RNText>
+        <RNText style={styles.emptySubtitle}>
           Keep swiping to find your perfect cofounder connection!
-        </Text>
+        </RNText>
         <TouchableOpacity onPress={loadMatches} style={styles.refreshButton} activeOpacity={0.8}>
           <MaterialCommunityIcons name="refresh" size={20} color={colors.text} />
           <RNText style={styles.refreshText}>Refresh</RNText>
@@ -170,16 +175,26 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
     gap: spacing.lg,
   },
+  emptyIconContainer: {
+    position: 'relative',
+    width: 80,
+    height: 80,
+  },
+  emptyIconOutline: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+  },
   emptyTitle: {
     fontSize: typography.fontSizes.xxl,
-    fontFamily: typography.fontFamilies.bold,
-    fontWeight: typography.fontWeights.bold,
+    fontFamily: typography.fontFamilies.regular,
     color: colors.text,
     marginTop: spacing.lg,
     textAlign: 'center',
   },
   emptySubtitle: {
     fontSize: typography.fontSizes.base,
+    fontFamily: typography.fontFamilies.regular,
     color: colors.textSecondary,
     textAlign: 'center',
     maxWidth: 280,

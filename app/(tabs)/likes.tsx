@@ -261,13 +261,18 @@ export default function LikesScreen() {
   if (likes.length === 0) {
     return (
       <View style={styles.centered}>
-        <MaterialCommunityIcons name="account-heart" size={80} color={colors.textTertiary} />
-        <Text variant="titleLarge" style={styles.emptyTitle}>
+        <View style={styles.emptyIconContainer}>
+          <MaterialCommunityIcons name="thumb-up" size={80} color={colors.background} />
+          <View style={styles.emptyIconOutline}>
+            <MaterialCommunityIcons name="thumb-up-outline" size={80} color={colors.primary} />
+          </View>
+        </View>
+        <RNText style={styles.emptyTitle}>
           No likes yet
-        </Text>
-        <Text variant="bodyMedium" style={styles.emptySubtitle}>
+        </RNText>
+        <RNText style={styles.emptySubtitle}>
           Keep swiping to get more likes from potential cofounders!
-        </Text>
+        </RNText>
         <TouchableOpacity onPress={loadLikes} style={styles.refreshButton} activeOpacity={0.8}>
           <MaterialCommunityIcons name="refresh" size={20} color={colors.text} />
           <RNText style={styles.refreshText}>Refresh</RNText>
@@ -405,16 +410,26 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
     gap: spacing.lg,
   },
+  emptyIconContainer: {
+    position: 'relative',
+    width: 80,
+    height: 80,
+  },
+  emptyIconOutline: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+  },
   emptyTitle: {
     fontSize: typography.fontSizes.xxl,
-    fontFamily: typography.fontFamilies.ui,
+    fontFamily: typography.fontFamilies.regular,
     color: colors.text,
     marginTop: spacing.lg,
     textAlign: 'center',
   },
   emptySubtitle: {
     fontSize: typography.fontSizes.base,
-    fontFamily: typography.fontFamilies.ui,
+    fontFamily: typography.fontFamilies.regular,
     color: colors.textSecondary,
     textAlign: 'center',
     maxWidth: 280,

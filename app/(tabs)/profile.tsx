@@ -125,14 +125,31 @@ export default function ProfileScreen() {
     .slice(0, 2);
 
   // Calculate profile completion
-  const totalFields = 8;
+  let totalFields = 12; // Base fields: name, age, headline, bio, stage, commitment, domains, skills, seeking, expertise, experience, availability
   let completedFields = 2; // Always have name and age
+  
+  // Profile fields
   if (profile?.headline) completedFields++;
   if (profile?.bio) completedFields++;
   if (profile?.stage) completedFields++;
   if (profile?.commitment_hours) completedFields++;
   if (profile?.domains && profile.domains.length > 0) completedFields++;
   if (profile?.skills && profile.skills.length > 0) completedFields++;
+  
+  // Intent fields (always present)
+  if (intent?.seeking) completedFields++;
+  if (intent?.expertise_areas && intent.expertise_areas.length > 0) completedFields++;
+  if (intent?.experience_level) completedFields++;
+  if (intent?.availability_text) completedFields++;
+  
+  // Investor-specific fields (add to total if investor)
+  if (intent?.seeking === 'investor') {
+    totalFields += 3; // investment_type, portfolio_size, portfolio_url (optional)
+    if (intent?.investment_type) completedFields++;
+    if (intent?.portfolio_size) completedFields++;
+    if (intent?.portfolio_url) completedFields++;
+  }
+  
   const completionPercent = Math.round((completedFields / totalFields) * 100);
 
   return (
@@ -248,22 +265,107 @@ export default function ProfileScreen() {
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <MaterialCommunityIcons name="target" size={20} color={colors.accent} />
-            <RNText style={styles.sectionTitle}>What I'm Looking For</RNText>
+            <RNText style={styles.sectionTitle}>
+              {intent.seeking === 'investor' ? 'Investment Profile' : 
+               intent.seeking === 'mentor' ? 'Mentorship Profile' : 
+               'What I\'m Looking For'}
+            </RNText>
           </View>
 
           <View style={styles.infoCard}>
             <MaterialCommunityIcons name="account-search" size={20} color={colors.primary} />
             <View style={styles.infoContent}>
-              <RNText style={styles.infoLabel}>Seeking</RNText>
+              <RNText style={styles.infoLabel}>Role</RNText>
               <RNText style={styles.infoValue}>{intent.seeking}</RNText>
             </View>
           </View>
+
+          {intent.expertise_areas && intent.expertise_areas.length > 0 && (
+            <View style={styles.chipsSection}>
+              <RNText style={styles.chipsLabel}>
+                {intent.seeking === 'investor' ? 'Investment Sectors' : 'Expertise Areas'}
+              </RNText>
+              <View style={styles.chips}>
+                {intent.expertise_areas.map((area) => (
+                  <View key={area} style={[styles.chip, styles.expertiseChip]}>
+                    <RNText style={styles.chipText}>{area}</RNText>
+                  </View>
+                ))}
+              </View>
+            </View>
+          )}
+
+          {intent.experience_level && (
+            <View style={styles.infoCard}>
+              <MaterialCommunityIcons 
+                name={intent.seeking === 'investor' ? 'trending-up' : 'medal'} 
+                size={20} 
+                color={colors.success} 
+              />
+              <View style={styles.infoContent}>
+                <RNText style={styles.infoLabel}>
+                  {intent.seeking === 'investor' ? 'Investment Stage' : 'Experience'}
+                </RNText>
+                <RNText style={styles.infoValue}>
+                  {intent.experience_level === 'pre-seed' ? 'Pre-seed' :
+                   intent.experience_level === 'seed' ? 'Seed' :
+                   intent.experience_level === 'series-a' ? 'Series A' :
+                   intent.experience_level === 'growth' ? 'Growth' :
+                   intent.experience_level === '5-10' ? '5-10 years' :
+                   intent.experience_level === '10-15' ? '10-15 years' :
+                   intent.experience_level === '15+' ? '15+ years' :
+                   intent.experience_level}
+                </RNText>
+              </View>
+            </View>
+          )}
+
+          {intent.investment_type && (
+            <View style={styles.infoCard}>
+              <MaterialCommunityIcons name="briefcase" size={20} color={colors.primary} />
+              <View style={styles.infoContent}>
+                <RNText style={styles.infoLabel}>Investment Type</RNText>
+                <RNText style={styles.infoValue}>
+                  {intent.investment_type === 'angel' ? 'Angel' :
+                   intent.investment_type === 'vc' ? 'VC' :
+                   intent.investment_type === 'family-office' ? 'Family Office' :
+                   intent.investment_type === 'corporate-vc' ? 'Corporate VC' :
+                   intent.investment_type === 'fund-manager' ? 'Fund Manager' :
+                   intent.investment_type}
+                </RNText>
+              </View>
+            </View>
+          )}
+
+          {intent.portfolio_size && (
+            <View style={styles.infoCard}>
+              <MaterialCommunityIcons name="chart-line" size={20} color={colors.accent} />
+              <View style={styles.infoContent}>
+                <RNText style={styles.infoLabel}>Portfolio Size</RNText>
+                <RNText style={styles.infoValue}>{intent.portfolio_size} active investments</RNText>
+              </View>
+            </View>
+          )}
+
+          {intent.portfolio_url && (
+            <View style={styles.infoCard}>
+              <MaterialCommunityIcons name="link" size={20} color={colors.accent} />
+              <View style={styles.infoContent}>
+                <RNText style={styles.infoLabel}>Portfolio</RNText>
+                <RNText style={[styles.infoValue, styles.linkText]} numberOfLines={1}>
+                  {intent.portfolio_url}
+                </RNText>
+              </View>
+            </View>
+          )}
 
           {intent.availability_text && (
             <View style={styles.infoCard}>
               <MaterialCommunityIcons name="calendar" size={20} color={colors.accent} />
               <View style={styles.infoContent}>
-                <RNText style={styles.infoLabel}>Availability</RNText>
+                <RNText style={styles.infoLabel}>
+                  {intent.seeking === 'investor' ? 'Investment Range' : 'Availability'}
+                </RNText>
                 <RNText style={styles.infoValue}>{intent.availability_text}</RNText>
               </View>
             </View>
@@ -347,8 +449,7 @@ const styles = StyleSheet.create({
   },
   avatarText: {
     fontSize: typography.fontSizes.display,
-    fontFamily: typography.fontFamilies.bold,
-    fontWeight: typography.fontWeights.bold,
+    fontFamily: typography.fontFamilies.regular,
     color: colors.text,
   },
   avatarEditButton: {
@@ -367,8 +468,7 @@ const styles = StyleSheet.create({
   },
   name: {
     fontSize: typography.fontSizes.xxl,
-    fontFamily: typography.fontFamilies.bold,
-    fontWeight: typography.fontWeights.bold,
+    fontFamily: typography.fontFamilies.regular,
     color: colors.text,
     marginBottom: spacing.xs,
   },
@@ -380,10 +480,12 @@ const styles = StyleSheet.create({
   },
   meta: {
     fontSize: typography.fontSizes.sm,
+    fontFamily: typography.fontFamilies.regular,
     color: colors.textSecondary,
   },
   separator: {
     fontSize: typography.fontSizes.sm,
+    fontFamily: typography.fontFamilies.regular,
     color: colors.textTertiary,
     marginHorizontal: spacing.xs,
   },
@@ -402,13 +504,12 @@ const styles = StyleSheet.create({
   },
   completionTitle: {
     fontSize: typography.fontSizes.sm,
-    fontFamily: typography.fontFamilies.medium,
+    fontFamily: typography.fontFamilies.regular,
     color: colors.textSecondary,
   },
   completionPercent: {
     fontSize: typography.fontSizes.lg,
-    fontFamily: typography.fontFamilies.bold,
-    fontWeight: typography.fontWeights.bold,
+    fontFamily: typography.fontFamilies.regular,
     color: colors.primary,
   },
   progressBar: {
@@ -434,8 +535,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: typography.fontSizes.lg,
-    fontFamily: typography.fontFamilies.bold,
-    fontWeight: typography.fontWeights.bold,
+    fontFamily: typography.fontFamilies.regular,
     color: colors.text,
   },
   infoCard: {
@@ -483,8 +583,7 @@ const styles = StyleSheet.create({
   },
   statValue: {
     fontSize: typography.fontSizes.base,
-    fontFamily: typography.fontFamilies.bold,
-    fontWeight: typography.fontWeights.bold,
+    fontFamily: typography.fontFamilies.regular,
     color: colors.text,
     textTransform: 'capitalize',
   },
@@ -493,7 +592,7 @@ const styles = StyleSheet.create({
   },
   chipsLabel: {
     fontSize: typography.fontSizes.sm,
-    fontFamily: typography.fontFamilies.medium,
+    fontFamily: typography.fontFamilies.regular,
     color: colors.textSecondary,
   },
   chips: {
@@ -516,10 +615,19 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.accent,
   },
+  expertiseChip: {
+    backgroundColor: `${colors.success}33`,
+    borderWidth: 1,
+    borderColor: colors.success,
+  },
   chipText: {
     fontSize: typography.fontSizes.sm,
-    fontFamily: typography.fontFamilies.medium,
+    fontFamily: typography.fontFamilies.regular,
     color: colors.text,
+  },
+  linkText: {
+    color: colors.primary,
+    textDecorationLine: 'underline',
   },
   signOutButton: {
     flexDirection: 'row',
@@ -537,8 +645,7 @@ const styles = StyleSheet.create({
   },
   signOutText: {
     fontSize: typography.fontSizes.base,
-    fontFamily: typography.fontFamilies.bold,
-    fontWeight: typography.fontWeights.bold,
+    fontFamily: typography.fontFamilies.regular,
     color: colors.error,
   },
   deleteAccountButton: {
@@ -555,8 +662,7 @@ const styles = StyleSheet.create({
   },
   deleteAccountText: {
     fontSize: typography.fontSizes.base,
-    fontFamily: typography.fontFamilies.bold,
-    fontWeight: typography.fontWeights.bold,
+    fontFamily: typography.fontFamilies.regular,
     color: colors.text,
   },
   bottomSpacer: {

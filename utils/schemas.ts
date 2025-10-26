@@ -19,6 +19,7 @@ export const profileSchema = z.object({
   skills: z.array(z.string()).min(1, 'Select at least one skill'),
   stage: z.enum(['idea', 'prototype', 'launched']),
   commitment_hours: z.number().min(1).max(80),
+  availability_text: z.string().max(200, 'Availability text too long').optional(),
 });
 
 export type ProfileForm = z.infer<typeof profileSchema>;
@@ -30,6 +31,15 @@ export const intentSchema = z.object({
 });
 
 export type IntentForm = z.infer<typeof intentSchema>;
+
+// Onboarding Step 4: Mentor/Investor Expertise
+export const expertiseSchema = z.object({
+  seeking: z.enum(['cofounder', 'teammate', 'mentor', 'investor']),
+  availability_text: z.string().max(200).optional(),
+  expertise_areas: z.array(z.string()).min(1, 'Select at least one expertise area'),
+});
+
+export type ExpertiseForm = z.infer<typeof expertiseSchema>;
 
 // Report schema
 export const reportSchema = z.object({

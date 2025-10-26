@@ -3,7 +3,7 @@
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
 export type AgeBand = '16-18' | '19-22' | '23-26' | '27+';
-export type Seeking = 'cofounder' | 'teammate' | 'mentor';
+export type Seeking = 'cofounder' | 'teammate' | 'mentor' | 'investor';
 export type Stage = 'idea' | 'prototype' | 'launched';
 export type SwipeDirection = 'like' | 'pass';
 export type VerificationType = 'linkedin' | 'github' | 'domain_email' | 'selfie';
@@ -81,16 +81,31 @@ export interface Database {
           user_id: string;
           seeking: Seeking;
           availability_text: string | null;
+          expertise_areas: string[] | null;
+          experience_level: string | null;
+          investment_type: string | null;
+          portfolio_size: string | null;
+          portfolio_url: string | null;
         };
         Insert: {
           user_id: string;
           seeking: Seeking;
           availability_text?: string | null;
+          expertise_areas?: string[] | null;
+          experience_level?: string | null;
+          investment_type?: string | null;
+          portfolio_size?: string | null;
+          portfolio_url?: string | null;
         };
         Update: {
           user_id?: string;
           seeking?: Seeking;
           availability_text?: string | null;
+          expertise_areas?: string[] | null;
+          experience_level?: string | null;
+          investment_type?: string | null;
+          portfolio_size?: string | null;
+          portfolio_url?: string | null;
         };
       };
       swipes: {
@@ -236,10 +251,11 @@ export type Match = Database['public']['Tables']['matches']['Row'];
 export type Message = Database['public']['Tables']['messages']['Row'];
 export type Verification = Database['public']['Tables']['verifications']['Row'];
 
-// Candidate type (user + profile data)
+// Candidate type (user + profile + intent data)
 export interface Candidate {
   user: User;
   profile: Profile;
+  intent?: Intent;
 }
 
 // Match with populated user data

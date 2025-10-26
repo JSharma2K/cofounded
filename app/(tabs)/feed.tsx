@@ -18,6 +18,10 @@ export default function FeedScreen() {
   const [showMatchModal, setShowMatchModal] = useState(false);
   const [matchedCandidate, setMatchedCandidate] = useState<Candidate | null>(null);
   const [swipeLoading, setSwipeLoading] = useState(false);
+  
+  // Animation values
+  const swipeAnimation = useState(new Animated.Value(0))[0];
+  const fadeAnimation = useState(new Animated.Value(1))[0];
 
   const loadCandidates = async () => {
     if (!user) return;
@@ -44,10 +48,31 @@ export default function FeedScreen() {
     setError('');
 
     try {
+      // Animate card swipe
+      const targetX = direction === 'like' ? 400 : -400; // Right for like, left for pass
+      
+      Animated.parallel([
+        Animated.timing(swipeAnimation, {
+          toValue: targetX,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+        Animated.timing(fadeAnimation, {
+          toValue: 0,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+      ]).start();
+
+      // Wait for animation before making the API call
+      await new Promise(resolve => setTimeout(resolve, 300));
+
       const result = await swipe(targetId, direction);
       
-      // Remove from list optimistically
+      // Remove from list and reset animations
       setCandidates((prev) => prev.filter((c) => c.user.id !== targetId));
+      swipeAnimation.setValue(0);
+      fadeAnimation.setValue(1);
 
       // Check for match
       if (direction === 'like' && result.match) {
@@ -57,6 +82,9 @@ export default function FeedScreen() {
       }
     } catch (err: any) {
       setError(err.message || 'Failed to swipe');
+      // Reset animations on error
+      swipeAnimation.setValue(0);
+      fadeAnimation.setValue(1);
     } finally {
       setSwipeLoading(false);
     }
@@ -92,9 +120,17 @@ export default function FeedScreen() {
 
       return (
         <View style={styles.container}>
-          <View style={styles.cardContainer}>
+          <Animated.View 
+            style={[
+              styles.cardContainer,
+              {
+                transform: [{ translateX: swipeAnimation }],
+                opacity: fadeAnimation,
+              }
+            ]}
+          >
             <CandidateCard candidate={currentCandidate} />
-          </View>
+          </Animated.View>
 
           {/* Buttons positioned below card */}
           <View style={styles.actionsContainer}>

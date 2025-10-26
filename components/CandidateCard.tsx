@@ -9,7 +9,7 @@ interface CandidateCardProps {
 }
 
 export function CandidateCard({ candidate }: CandidateCardProps) {
-  const { user, profile } = candidate;
+  const { user, profile, intent } = candidate;
 
   const initials = user.display_name
     .split(' ')
@@ -43,7 +43,11 @@ export function CandidateCard({ candidate }: CandidateCardProps) {
         </View>
       </View>
 
-      <ScrollView style={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <ScrollView 
+        style={styles.scrollContent} 
+        contentContainerStyle={styles.scrollContentContainer}
+        showsVerticalScrollIndicator={false}
+      >
         {/* Headline */}
         {profile.headline && (
           <View style={styles.section}>
@@ -107,6 +111,105 @@ export function CandidateCard({ candidate }: CandidateCardProps) {
                 </View>
               ))}
             </View>
+          </View>
+        )}
+
+        {/* Intent Section */}
+        {intent && (
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <MaterialCommunityIcons name="target" size={18} color={colors.success} />
+              <Text style={styles.sectionTitle}>
+                {intent.seeking === 'investor' ? 'Investment Focus' : 
+                 intent.seeking === 'mentor' ? 'Mentorship' : 
+                 'Looking For'}
+              </Text>
+            </View>
+
+            {/* Role Badge */}
+            <View style={styles.roleBadge}>
+              <MaterialCommunityIcons 
+                name={intent.seeking === 'investor' ? 'cash-multiple' : 
+                     intent.seeking === 'mentor' ? 'school' : 
+                     'account-search'} 
+                size={16} 
+                color={colors.primary} 
+              />
+              <Text style={styles.roleText}>{intent.seeking}</Text>
+            </View>
+
+            {/* Expertise Areas */}
+            {intent.expertise_areas && intent.expertise_areas.length > 0 && (
+              <View style={styles.subsection}>
+                <Text style={styles.subsectionLabel}>
+                  {intent.seeking === 'investor' ? 'Investment Sectors' : 'Expertise'}
+                </Text>
+                <View style={styles.chips}>
+                  {intent.expertise_areas.map((area) => (
+                    <View key={area} style={[styles.chip, styles.expertiseChip]}>
+                      <Text style={styles.chipText}>{area}</Text>
+                    </View>
+                  ))}
+                </View>
+              </View>
+            )}
+
+            {/* Experience Level */}
+            {intent.experience_level && (
+              <View style={styles.intentDetail}>
+                <MaterialCommunityIcons 
+                  name={intent.seeking === 'investor' ? 'trending-up' : 'medal'} 
+                  size={16} 
+                  color={colors.accent} 
+                />
+                <Text style={styles.intentLabel}>
+                  {intent.seeking === 'investor' ? 'Stage:' : 'Experience:'}
+                </Text>
+                <Text style={styles.intentValue}>
+                  {intent.experience_level === 'pre-seed' ? 'Pre-seed' :
+                   intent.experience_level === 'seed' ? 'Seed' :
+                   intent.experience_level === 'series-a' ? 'Series A' :
+                   intent.experience_level === 'growth' ? 'Growth' :
+                   intent.experience_level === '5-10' ? '5-10 years' :
+                   intent.experience_level === '10-15' ? '10-15 years' :
+                   intent.experience_level === '15+' ? '15+ years' :
+                   intent.experience_level}
+                </Text>
+              </View>
+            )}
+
+            {/* Investment Type (Investors only) */}
+            {intent.investment_type && (
+              <View style={styles.intentDetail}>
+                <MaterialCommunityIcons name="briefcase" size={16} color={colors.accent} />
+                <Text style={styles.intentLabel}>Type:</Text>
+                <Text style={styles.intentValue}>
+                  {intent.investment_type === 'angel' ? 'Angel' :
+                   intent.investment_type === 'vc' ? 'VC' :
+                   intent.investment_type === 'family-office' ? 'Family Office' :
+                   intent.investment_type === 'corporate-vc' ? 'Corporate VC' :
+                   intent.investment_type === 'fund-manager' ? 'Fund Manager' :
+                   intent.investment_type}
+                </Text>
+              </View>
+            )}
+
+            {/* Portfolio Size (Investors only) */}
+            {intent.portfolio_size && (
+              <View style={styles.intentDetail}>
+                <MaterialCommunityIcons name="chart-line" size={16} color={colors.accent} />
+                <Text style={styles.intentLabel}>Portfolio:</Text>
+                <Text style={styles.intentValue}>{intent.portfolio_size} investments</Text>
+              </View>
+            )}
+
+            {/* Availability */}
+            {intent.availability_text && (
+              <View style={styles.availabilityCard}>
+                <MaterialCommunityIcons name="calendar-clock" size={16} color={colors.primary} />
+                <Text style={styles.availabilityText}>{intent.availability_text}</Text>
+              </View>
+            )}
           </View>
         )}
       </ScrollView>
@@ -196,7 +299,10 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flex: 1,
+  },
+  scrollContentContainer: {
     padding: spacing.lg,
+    paddingBottom: spacing.xl,
   },
   section: {
     marginBottom: spacing.lg,
@@ -275,6 +381,75 @@ const styles = StyleSheet.create({
     fontSize: typography.fontSizes.sm,
     fontFamily: typography.fontFamilies.regular,
     color: colors.text,
+  },
+  expertiseChip: {
+    backgroundColor: `${colors.success}33`,
+    borderWidth: 1,
+    borderColor: colors.success,
+  },
+  roleBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    backgroundColor: `${colors.primary}22`,
+    borderRadius: borderRadius.full,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    marginBottom: spacing.md,
+    gap: spacing.xs,
+  },
+  roleText: {
+    fontSize: typography.fontSizes.sm,
+    fontFamily: typography.fontFamilies.regular,
+    color: colors.primary,
+    textTransform: 'capitalize',
+  },
+  subsection: {
+    marginBottom: spacing.md,
+  },
+  subsectionLabel: {
+    fontSize: typography.fontSizes.sm,
+    fontFamily: typography.fontFamilies.regular,
+    color: colors.textSecondary,
+    marginBottom: spacing.sm,
+  },
+  intentDetail: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginBottom: spacing.sm,
+    backgroundColor: colors.background,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+    borderRadius: borderRadius.md,
+  },
+  intentLabel: {
+    fontSize: typography.fontSizes.sm,
+    fontFamily: typography.fontFamilies.regular,
+    color: colors.textTertiary,
+  },
+  intentValue: {
+    fontSize: typography.fontSizes.sm,
+    fontFamily: typography.fontFamilies.regular,
+    color: colors.text,
+  },
+  availabilityCard: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: spacing.sm,
+    backgroundColor: `${colors.primary}11`,
+    padding: spacing.md,
+    borderRadius: borderRadius.md,
+    borderWidth: 1,
+    borderColor: `${colors.primary}33`,
+    marginTop: spacing.sm,
+  },
+  availabilityText: {
+    flex: 1,
+    fontSize: typography.fontSizes.sm,
+    fontFamily: typography.fontFamilies.regular,
+    color: colors.textSecondary,
+    lineHeight: typography.fontSizes.sm * typography.lineHeights.relaxed,
   },
 });
 

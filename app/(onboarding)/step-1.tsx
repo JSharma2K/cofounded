@@ -359,9 +359,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   chipSelected: {
-    backgroundColor: colors.surface, // Keep same background
-    borderColor: colors.primary,    // Only coral outline
-    borderWidth: 2,                 // Thicker border when selected
+    backgroundColor: colors.surface,
+    borderColor: colors.primary,
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.5,
+    shadowRadius: 6,
   },
   chipText: {
     color: colors.textSecondary,
@@ -379,7 +382,9 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
     alignItems: 'center',
     justifyContent: 'center',
-    margin: spacing.lg,
+    marginHorizontal: spacing.lg,
+    marginTop: spacing.sm, // Reduced from spacing.lg to move button higher
+    marginBottom: spacing.lg,
     shadowColor: colors.primary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
