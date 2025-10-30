@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, Text, TextInput as RNTextInput, TouchableOpacity, Modal } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, Text, TextInput as RNTextInput, TouchableOpacity, Modal, ActivityIndicator } from 'react-native';
 import { Snackbar, SegmentedButtons } from 'react-native-paper';
 import { useRouter } from 'expo-router';
 import { useForm, Controller } from 'react-hook-form';
@@ -9,6 +9,7 @@ import { upsertProfile } from '../../lib/api/onboarding';
 import { useSession } from '../../lib/hooks/useSession';
 import { DOMAIN_CATEGORIES } from '../../utils/constants';
 import { colors, typography, spacing, borderRadius } from '../../utils/theme';
+import { supabase } from '../../lib/supabase';
 
 export default function Step2Screen() {
   const router = useRouter();
@@ -20,6 +21,8 @@ export default function Step2Screen() {
   const [selectedBusinessCategory, setSelectedBusinessCategory] = useState<string | null>(null);
   const [showBusinessDropdown, setShowBusinessDropdown] = useState(false);
   const [showSkillsDropdown, setShowSkillsDropdown] = useState(false);
+  const [userRole, setUserRole] = useState<string | null>(null);
+  const [fetchingRole, setFetchingRole] = useState(true);
 
   const {
     control,
@@ -40,8 +43,48 @@ export default function Step2Screen() {
     },
   });
 
+  // Fetch user's role to determine which fields to show
+  useEffect(() => {
+    async function fetchUserRole() {
+      if (!user) return;
+      
+      try {
+        const { data, error } = await supabase
+          .from('users')
+          .select('user_role')
+          .eq('id', user.id)
+          .single();
+        
+        if (error) throw error;
+        const role = data?.user_role || null;
+        setUserRole(role);
+        
+        // Set default hours based on role
+        if (role === 'cofounder') {
+          setValue('commitment_hours', 50);
+        } else if (role === 'teammate') {
+          setValue('commitment_hours', 20);
+        } else if (role === 'founder') {
+          setValue('commitment_hours', 20);
+        }
+      } catch (err) {
+        console.error('Error fetching user role:', err);
+      } finally {
+        setFetchingRole(false);
+      }
+    }
+    
+    fetchUserRole();
+  }, [user, setValue]);
+
   const onSubmit = async (data: ProfileForm) => {
     if (!user) return;
+
+    // Validate cofounder hours (must be at least 50)
+    if (userRole === 'cofounder' && data.commitment_hours < 50) {
+      setError('Co-founders must commit at least 50 hours per week');
+      return;
+    }
 
     setLoading(true);
     setError('');
@@ -56,6 +99,17 @@ export default function Step2Screen() {
     }
   };
 
+  if (fetchingRole) {
+    return (
+      <View style={[styles.container, styles.loadingContainer]}>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
+  }
+
+  const isFounder = userRole === 'founder';
+  const isTeammateOrCofounder = userRole === 'teammate' || userRole === 'cofounder';
+
   return (
     <KeyboardAvoidingView
       style={styles.container}
@@ -69,7 +123,9 @@ export default function Step2Screen() {
         <View style={styles.content}>
           <Text style={styles.heading}>Build your profile</Text>
 
-          <Text style={styles.label}>Your Business Domain</Text>
+          {isFounder && (
+            <>
+              <Text style={styles.label}>Your Business Domain</Text>
           <Controller
             control={control}
             name="business_domains"
@@ -182,7 +238,7 @@ export default function Step2Screen() {
           />
           {errors.business_domains && <Text style={styles.errorText}>{errors.business_domains.message}</Text>}
 
-          <Text style={styles.label}>Current Stage</Text>
+              <Text style={styles.label}>Current Stage</Text>
           <Controller
             control={control}
             name="stage"
@@ -216,15 +272,23 @@ export default function Step2Screen() {
             )}
           />
           {errors.stage && <Text style={styles.errorText}>{errors.stage.message}</Text>}
+            </>
+          )}
 
-          <Text style={styles.label}>Describe Your Business</Text>
+          <Text style={styles.label}>
+            {isFounder ? 'Describe Your Business' : 'About You'}
+          </Text>
           <Controller
             control={control}
             name="headline"
             render={({ field: { onChange, onBlur, value } }) => (
               <View>
                 <RNTextInput
-                  placeholder="What is your business idea or startup about? Describe your vision, target market, and what makes your idea unique..."
+                  placeholder={
+                    isFounder
+                      ? "What is your business idea or startup about? Describe your vision, target market, and what makes your idea unique..."
+                      : "Tell us about your professional background, key skills, and what you bring to a team..."
+                  }
                   placeholderTextColor={colors.textTertiary}
                   value={value}
                   onChangeText={onChange}
@@ -385,21 +449,42 @@ export default function Step2Screen() {
             <Text style={styles.errorText}>{errors.bio.message}</Text>
           )}
 
-          <Text style={styles.label}>Weekly Commitment</Text>
+          <Text style={styles.label}>
+            {isTeammateOrCofounder ? 'Weekly Availability (Hours)' : 'Weekly Commitment'}
+          </Text>
+          {userRole === 'cofounder' && (
+            <Text style={styles.subLabel}>
+              Co-founders must commit at least 50 hours per week
+            </Text>
+          )}
           <Controller
             control={control}
             name="commitment_hours"
-            render={({ field: { onChange, onBlur, value } }) => (
-              <View style={[styles.commitRow, focused === 'commitment' && styles.inputFocused, errors.commitment_hours && styles.inputError]}> 
+            render={({ field: { onChange, value } }) => (
+              <View>
                 <RNTextInput
                   value={String(value)}
-                  onChangeText={(text) => onChange(parseInt(text) || 0)}
+                  onChangeText={(text) => {
+                    if (text === '') {
+                      onChange(0);
+                      return;
+                    }
+                    const num = parseInt(text, 10);
+                    if (!isNaN(num)) {
+                      onChange(num);
+                    }
+                  }}
                   onFocus={() => setFocused('commitment')}
                   onBlur={() => setFocused(null)}
                   keyboardType="number-pad"
-                  style={[styles.commitInput]}
+                  placeholder="Enter hours per week"
+                  placeholderTextColor={colors.textTertiary}
+                  style={[
+                    styles.hoursInput,
+                    focused === 'commitment' && styles.inputFocused,
+                    errors.commitment_hours && styles.inputError
+                  ]}
                 />
-                <Text style={styles.commitUnit}>hrs</Text>
               </View>
             )}
           />
@@ -514,27 +599,18 @@ const styles = StyleSheet.create({
     minHeight: 100,
     textAlignVertical: 'top',
   },
-  commitRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  hoursInput: {
     backgroundColor: colors.surface,
-    borderRadius: borderRadius.sm,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  commitInput: {
-    flex: 1,
-    fontSize: typography.fontSizes.sm,
+    borderRadius: borderRadius.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
+    fontSize: typography.fontSizes.base,
     fontFamily: typography.fontFamilies.regular,
     color: colors.text,
-  },
-  commitUnit: {
-    marginLeft: spacing.xs,
-    fontSize: typography.fontSizes.sm,
-    fontFamily: typography.fontFamilies.regular,
-    color: colors.textSecondary,
+    marginTop: spacing.md,
+    marginBottom: spacing.sm,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   inputError: {
     borderColor: colors.error,
@@ -763,6 +839,10 @@ const styles = StyleSheet.create({
   },
   snackbar: {
     backgroundColor: colors.error,
+  },
+  loadingContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
 

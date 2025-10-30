@@ -9,19 +9,51 @@ import { CandidateCard } from '../../components/CandidateCard';
 import type { Candidate } from '../../lib/types';
 import { colors, typography, spacing, borderRadius, shadows } from '../../utils/theme';
 
+type SeekingFilter = 'all' | 'cofounder' | 'mentor' | 'investor';
+
 export default function FeedScreen() {
   const router = useRouter();
   const { user } = useSession();
   const [candidates, setCandidates] = useState<Candidate[]>([]);
+  const [allCandidates, setAllCandidates] = useState<Candidate[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showMatchModal, setShowMatchModal] = useState(false);
   const [matchedCandidate, setMatchedCandidate] = useState<Candidate | null>(null);
   const [swipeLoading, setSwipeLoading] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
+  
+  // Filter states
+  const [maxAge, setMaxAge] = useState<number | null>(null);
+  const [seekingFilter, setSeekingFilter] = useState<SeekingFilter>('all');
   
   // Animation values
   const swipeAnimation = useState(new Animated.Value(0))[0];
   const fadeAnimation = useState(new Animated.Value(1))[0];
+
+  const applyFilters = (data: Candidate[]) => {
+    let filtered = [...data];
+
+    // Apply age filter
+    if (maxAge !== null) {
+      filtered = filtered.filter(candidate => {
+        const ageBand = candidate.user.age_band;
+        if (ageBand === '18-22') return 22 <= maxAge;
+        if (ageBand === '23-26') return 26 <= maxAge;
+        if (ageBand === '27+') return maxAge >= 27;
+        return true;
+      });
+    }
+
+    // Apply seeking filter
+    if (seekingFilter !== 'all') {
+      filtered = filtered.filter(candidate => 
+        candidate.intent?.seeking === seekingFilter
+      );
+    }
+
+    return filtered;
+  };
 
   const loadCandidates = async () => {
     if (!user) return;
@@ -31,7 +63,8 @@ export default function FeedScreen() {
 
     try {
       const data = await getCandidates(50);
-      setCandidates(data);
+      setAllCandidates(data);
+      setCandidates(applyFilters(data));
     } catch (err: any) {
       setError(err.message || 'Failed to load candidates');
     } finally {
@@ -42,6 +75,11 @@ export default function FeedScreen() {
   useEffect(() => {
     loadCandidates();
   }, [user]);
+
+  // Reapply filters when filter settings change
+  useEffect(() => {
+    setCandidates(applyFilters(allCandidates));
+  }, [maxAge, seekingFilter]);
 
   const handleSwipe = async (targetId: string, direction: 'like' | 'pass') => {
     setSwipeLoading(true);
@@ -120,6 +158,21 @@ export default function FeedScreen() {
 
       return (
         <View style={styles.container}>
+          {/* Filter Button */}
+          <View style={styles.header}>
+            <TouchableOpacity 
+              onPress={() => setShowFilters(true)}
+              style={styles.filterButton}
+              activeOpacity={0.8}
+            >
+              <MaterialCommunityIcons name="filter-variant" size={20} color={colors.text} />
+              <RNText style={styles.filterButtonText}>Filters</RNText>
+              {(maxAge !== null || seekingFilter !== 'all') && (
+                <View style={styles.filterBadge} />
+              )}
+            </TouchableOpacity>
+          </View>
+
           <Animated.View 
             style={[
               styles.cardContainer,
@@ -202,6 +255,106 @@ export default function FeedScreen() {
                 <RNText style={styles.modalButtonPrimaryText}>Send Message</RNText>
               </TouchableOpacity>
             </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Filter Modal */}
+      <Modal
+        visible={showFilters}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowFilters(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, styles.filterModal]}>
+            <View style={styles.filterHeader}>
+              <RNText style={styles.filterTitle}>Filters</RNText>
+              <TouchableOpacity onPress={() => setShowFilters(false)} activeOpacity={0.8}>
+                <MaterialCommunityIcons name="close" size={24} color={colors.text} />
+              </TouchableOpacity>
+            </View>
+
+            {/* Age Filter */}
+            <View style={styles.filterSection}>
+              <RNText style={styles.filterSectionTitle}>Maximum Age</RNText>
+              <View style={styles.ageButtons}>
+                {[null, 25, 30, 35, 40, 50].map((age) => (
+                  <TouchableOpacity
+                    key={age || 'any'}
+                    style={[
+                      styles.ageButton,
+                      maxAge === age && styles.ageButtonActive
+                    ]}
+                    onPress={() => setMaxAge(age)}
+                    activeOpacity={0.8}
+                  >
+                    <RNText style={[
+                      styles.ageButtonText,
+                      maxAge === age && styles.ageButtonTextActive
+                    ]}>
+                      {age ? `${age}` : 'Any'}
+                    </RNText>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+
+            {/* Seeking Filter */}
+            <View style={styles.filterSection}>
+              <RNText style={styles.filterSectionTitle}>Looking For</RNText>
+              <View style={styles.seekingButtons}>
+                {[
+                  { value: 'all', label: 'All', icon: 'account-group' },
+                  { value: 'cofounder', label: 'Cofounders', icon: 'account-multiple' },
+                  { value: 'mentor', label: 'Mentors', icon: 'school' },
+                  { value: 'investor', label: 'Investors', icon: 'cash-multiple' },
+                ].map((option) => (
+                  <TouchableOpacity
+                    key={option.value}
+                    style={[
+                      styles.seekingButton,
+                      seekingFilter === option.value && styles.seekingButtonActive
+                    ]}
+                    onPress={() => setSeekingFilter(option.value as SeekingFilter)}
+                    activeOpacity={0.8}
+                  >
+                    <MaterialCommunityIcons 
+                      name={option.icon as any} 
+                      size={20} 
+                      color={seekingFilter === option.value ? colors.text : colors.textSecondary} 
+                    />
+                    <RNText style={[
+                      styles.seekingButtonText,
+                      seekingFilter === option.value && styles.seekingButtonTextActive
+                    ]}>
+                      {option.label}
+                    </RNText>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+
+            {/* Clear Filters */}
+            <TouchableOpacity
+              style={styles.clearFiltersButton}
+              onPress={() => {
+                setMaxAge(null);
+                setSeekingFilter('all');
+              }}
+              activeOpacity={0.8}
+            >
+              <RNText style={styles.clearFiltersText}>Clear All Filters</RNText>
+            </TouchableOpacity>
+
+            {/* Apply Button */}
+            <TouchableOpacity
+              style={styles.applyButton}
+              onPress={() => setShowFilters(false)}
+              activeOpacity={0.8}
+            >
+              <RNText style={styles.applyButtonText}>Apply Filters</RNText>
+            </TouchableOpacity>
           </View>
         </View>
       </Modal>
@@ -359,6 +512,131 @@ const styles = StyleSheet.create({
     fontSize: typography.fontSizes.base,
     fontFamily: typography.fontFamilies.ui,
     color: colors.textSecondary,
+  },
+  header: {
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+  },
+  filterButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    backgroundColor: colors.surface,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: borderRadius.full,
+    ...shadows.small,
+  },
+  filterButtonText: {
+    fontSize: typography.fontSizes.sm,
+    fontFamily: typography.fontFamilies.regular,
+    color: colors.text,
+  },
+  filterBadge: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: colors.primary,
+  },
+  filterModal: {
+    maxHeight: '80%',
+    width: '90%',
+  },
+  filterHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: spacing.lg,
+  },
+  filterTitle: {
+    fontSize: typography.fontSizes.xxl,
+    fontFamily: typography.fontFamilies.regular,
+    color: colors.text,
+  },
+  filterSection: {
+    marginBottom: spacing.xl,
+  },
+  filterSectionTitle: {
+    fontSize: typography.fontSizes.base,
+    fontFamily: typography.fontFamilies.regular,
+    color: colors.text,
+    marginBottom: spacing.md,
+  },
+  ageButtons: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+  },
+  ageButton: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: borderRadius.md,
+    backgroundColor: colors.background,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  ageButtonActive: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+  ageButtonText: {
+    fontSize: typography.fontSizes.sm,
+    fontFamily: typography.fontFamilies.regular,
+    color: colors.textSecondary,
+  },
+  ageButtonTextActive: {
+    color: colors.text,
+  },
+  seekingButtons: {
+    gap: spacing.sm,
+  },
+  seekingButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
+    borderRadius: borderRadius.md,
+    backgroundColor: colors.background,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  seekingButtonActive: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+  seekingButtonText: {
+    fontSize: typography.fontSizes.base,
+    fontFamily: typography.fontFamilies.regular,
+    color: colors.textSecondary,
+  },
+  seekingButtonTextActive: {
+    color: colors.text,
+  },
+  clearFiltersButton: {
+    paddingVertical: spacing.md,
+    alignItems: 'center',
+    marginTop: spacing.md,
+  },
+  clearFiltersText: {
+    fontSize: typography.fontSizes.base,
+    fontFamily: typography.fontFamilies.regular,
+    color: colors.textSecondary,
+  },
+  applyButton: {
+    backgroundColor: colors.primary,
+    paddingVertical: spacing.md,
+    borderRadius: borderRadius.md,
+    alignItems: 'center',
+    marginTop: spacing.md,
+    ...shadows.medium,
+  },
+  applyButtonText: {
+    fontSize: typography.fontSizes.lg,
+    fontFamily: typography.fontFamilies.regular,
+    color: colors.text,
   },
 });
 

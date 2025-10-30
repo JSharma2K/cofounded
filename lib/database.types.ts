@@ -480,7 +480,7 @@ export type Database = {
       }
     }
     Enums: {
-      seeking: "cofounder" | "teammate" | "mentor" | "investor"
+      seeking: "founder" | "cofounder" | "teammate" | "mentor" | "investor"
     }
     CompositeTypes: {
       candidate_card: {
@@ -619,7 +619,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      seeking: ["cofounder", "teammate", "mentor", "investor"],
+      seeking: ["founder", "cofounder", "teammate", "mentor", "investor"],
     },
   },
 } as const

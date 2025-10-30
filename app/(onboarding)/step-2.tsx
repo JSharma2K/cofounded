@@ -14,12 +14,14 @@ export default function Step3Screen() {
   const { user } = useSession();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [userRole, setUserRole] = useState<'cofounder' | 'teammate' | 'mentor' | 'investor'>('cofounder');
+  const [userRole, setUserRole] = useState<'founder' | 'teammate' | 'mentor' | 'investor'>('founder');
+  const [commitmentLevel, setCommitmentLevel] = useState<'teammate' | 'cofounder'>('teammate');
 
   const {
     control,
     handleSubmit,
     formState: { errors },
+    setValue,
   } = useForm<IntentForm>({
     resolver: zodResolver(intentSchema),
     defaultValues: {
@@ -34,13 +36,25 @@ export default function Step3Screen() {
     setError('');
 
     try {
-      // Store the user role in the database
-      await updateUserRole(user.id, userRole);
+      // Determine the actual role to save:
+      // If user selected "Teammate" as joining role, save their commitment level (teammate or cofounder)
+      // Otherwise, save the selected role
+      const roleToSave = userRole === 'teammate' ? commitmentLevel : userRole;
       
-      // For investors and mentors, set seeking to their role
+      // Store the user role in the database
+      await updateUserRole(user.id, roleToSave);
+      
+      // Determine the seeking value:
+      // - Teammates, Mentors, and Investors all seek 'founder'
+      // - Founders seek what they selected (cofounder, teammate, mentor, investor)
+      let seekingValue = data.seeking;
+      if (userRole === 'teammate' || userRole === 'mentor' || userRole === 'investor') {
+        seekingValue = 'founder';
+      }
+      
       const intentData = {
         ...data,
-        seeking: (userRole === 'investor' || userRole === 'mentor') ? userRole : data.seeking,
+        seeking: seekingValue,
       };
       
       await upsertIntent(user.id, intentData);
@@ -75,7 +89,7 @@ export default function Step3Screen() {
             </Text>
             <View style={styles.roleContainer}>
               {[
-                { value: 'cofounder', label: 'Cofounder' },
+                { value: 'founder', label: 'Founder' },
                 { value: 'teammate', label: 'Teammate' },
                 { value: 'mentor', label: 'Mentor' },
                 { value: 'investor', label: 'Investor' },
@@ -86,7 +100,15 @@ export default function Step3Screen() {
                     styles.roleButton,
                     userRole === role.value && styles.roleButtonSelected,
                   ]}
-                  onPress={() => setUserRole(role.value as any)}
+                  onPress={() => {
+                    setUserRole(role.value as any);
+                    // Set default seeking value based on role
+                    if (role.value === 'teammate') {
+                      setValue('seeking', 'teammate');
+                    } else if (role.value === 'founder') {
+                      setValue('seeking', 'cofounder');
+                    }
+                  }}
                   activeOpacity={0.7}
                 >
                   <Text style={[
@@ -99,10 +121,78 @@ export default function Step3Screen() {
               ))}
             </View>
 
-            {userRole === 'cofounder' || userRole === 'teammate' ? (
+            {userRole === 'teammate' ? (
+              <>
+                <Text style={styles.label}>
+                  Are you joining as a teammate or co-founder?
+                </Text>
+                <View style={styles.commitmentContainer}>
+                  <TouchableOpacity
+                    style={[
+                      styles.commitmentCard,
+                      commitmentLevel === 'teammate' && styles.commitmentCardSelected,
+                    ]}
+                    onPress={() => {
+                      setCommitmentLevel('teammate');
+                      setValue('seeking', 'founder');
+                    }}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={[
+                      styles.commitmentTitle,
+                      commitmentLevel === 'teammate' && styles.commitmentTitleSelected,
+                    ]}>
+                      Teammate
+                    </Text>
+                    <Text style={styles.commitmentDescription}>
+                      Choose this if you want to contribute with limited hours and supporting responsibilities within a collaborative team.
+                    </Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={[
+                      styles.commitmentCard,
+                      commitmentLevel === 'cofounder' && styles.commitmentCardSelected,
+                    ]}
+                    onPress={() => {
+                      setCommitmentLevel('cofounder');
+                      setValue('seeking', 'founder');
+                    }}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={[
+                      styles.commitmentTitle,
+                      commitmentLevel === 'cofounder' && styles.commitmentTitleSelected,
+                    ]}>
+                      Co-founder
+                    </Text>
+                    <Text style={styles.commitmentDescription}>
+                      Select this if you don't have a founding idea but have high availability and are ready for shared ownership and long-term commitment to drive the idea forward.
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+
+                <Text style={styles.label}>
+                  I'm seeking a...
+                </Text>
+                <Text style={styles.helperText}>
+                  This will set your initial feed filters. You can change these anytime.
+                </Text>
+                <View style={styles.roleContainer}>
+                  <View style={[styles.roleButton, styles.roleButtonSelected]}>
+                    <Text style={[styles.roleButtonText, styles.roleButtonTextSelected]}>
+                      Founder
+                    </Text>
+                  </View>
+                </View>
+              </>
+            ) : userRole === 'founder' ? (
               <>
                 <Text style={styles.label}>
                   I'm seeking a...
+                </Text>
+                <Text style={styles.helperText}>
+                  This will set your initial feed filters. You can change these anytime.
                 </Text>
                 <Controller
                   control={control}
@@ -135,6 +225,22 @@ export default function Step3Screen() {
                     </View>
                   )}
                 />
+              </>
+            ) : (userRole === 'mentor' || userRole === 'investor') ? (
+              <>
+                <Text style={styles.label}>
+                  I'm seeking a...
+                </Text>
+                <Text style={styles.helperText}>
+                  This will set your initial feed filters. You can change these anytime.
+                </Text>
+                <View style={styles.roleContainer}>
+                  <View style={[styles.roleButton, styles.roleButtonSelected]}>
+                    <Text style={[styles.roleButtonText, styles.roleButtonTextSelected]}>
+                      Founder
+                    </Text>
+                  </View>
+                </View>
               </>
             ) : null}
           </View>
@@ -186,6 +292,13 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     marginTop: spacing.lg,
     marginBottom: spacing.md,
+  },
+  helperText: {
+    fontSize: typography.fontSizes.sm,
+    fontFamily: typography.fontFamilies.regular,
+    color: colors.textTertiary,
+    marginBottom: spacing.md,
+    marginTop: -spacing.xs,
   },
   input: {
     backgroundColor: colors.surface,
@@ -257,6 +370,41 @@ const styles = StyleSheet.create({
   roleButtonTextSelected: {
     color: colors.primary,
     fontWeight: '500',
+  },
+  commitmentContainer: {
+    gap: spacing.md,
+    marginBottom: spacing.lg,
+  },
+  commitmentCard: {
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.lg,
+    padding: spacing.lg,
+    borderWidth: 2,
+    borderColor: colors.border,
+  },
+  commitmentCardSelected: {
+    borderColor: colors.primary,
+    backgroundColor: colors.surface,
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+  },
+  commitmentTitle: {
+    fontSize: typography.fontSizes.lg,
+    fontFamily: typography.fontFamilies.regular,
+    fontWeight: typography.fontWeights.semibold,
+    color: colors.textSecondary,
+    marginBottom: spacing.sm,
+  },
+  commitmentTitleSelected: {
+    color: colors.primary,
+  },
+  commitmentDescription: {
+    fontSize: typography.fontSizes.sm,
+    fontFamily: typography.fontFamilies.regular,
+    color: colors.textTertiary,
+    lineHeight: 20,
   },
   button: {
     backgroundColor: colors.primary, // #E89B8E - Consistent coral theme color

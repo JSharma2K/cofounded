@@ -44,10 +44,10 @@ export async function upsertProfile(userId: string, data: ProfileForm) {
       user_id: userId,
       headline: data.headline,
       bio: data.bio,
-      business_domains: data.business_domains,
+      business_domains: data.business_domains || [],
       domains: data.domains,
       skills: data.skills,
-      stage: data.stage,
+      stage: data.stage || null,
       commitment_hours: data.commitment_hours,
       availability_text: data.availability_text,
     }, { onConflict: 'user_id' });

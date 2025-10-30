@@ -14,11 +14,11 @@ export type UserInfoForm = z.infer<typeof userInfoSchema>;
 export const profileSchema = z.object({
   headline: z.string().max(2500, 'Business description too long').optional(),
   bio: z.string().max(500, 'Bio must be under 500 characters').optional(),
-  business_domains: z.array(z.string()).min(1, 'Select at least one business domain'),
+  business_domains: z.array(z.string()).optional(),
   domains: z.array(z.string()).min(1, 'Select at least one domain'),
   skills: z.array(z.string()).min(1, 'Select at least one skill'),
-  stage: z.enum(['idea', 'prototype', 'launched']),
-  commitment_hours: z.number().min(1).max(80),
+  stage: z.enum(['idea', 'prototype', 'launched']).optional(),
+  commitment_hours: z.number().min(1).max(168),
   availability_text: z.string().max(200, 'Availability text too long').optional(),
 });
 
@@ -26,7 +26,7 @@ export type ProfileForm = z.infer<typeof profileSchema>;
 
 // Onboarding Step 3: Intent
 export const intentSchema = z.object({
-  seeking: z.enum(['cofounder', 'teammate', 'mentor', 'investor']),
+  seeking: z.enum(['founder', 'cofounder', 'teammate', 'mentor', 'investor']),
   availability_text: z.string().max(200).optional(),
 });
 
@@ -34,7 +34,7 @@ export type IntentForm = z.infer<typeof intentSchema>;
 
 // Onboarding Step 4: Mentor/Investor Expertise
 export const expertiseSchema = z.object({
-  seeking: z.enum(['cofounder', 'teammate', 'mentor', 'investor']),
+  seeking: z.enum(['founder', 'cofounder', 'teammate', 'mentor', 'investor']),
   availability_text: z.string().max(200).optional(),
   expertise_areas: z.array(z.string()).min(1, 'Select at least one expertise area'),
 });
