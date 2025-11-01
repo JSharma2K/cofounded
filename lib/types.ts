@@ -3,7 +3,7 @@
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
 export type AgeBand = '16-18' | '19-22' | '23-26' | '27+';
-export type Seeking = 'cofounder' | 'teammate' | 'mentor' | 'investor';
+export type Seeking = 'founder' | 'cofounder' | 'teammate' | 'mentor' | 'investor';
 export type Stage = 'idea' | 'prototype' | 'launched';
 export type SwipeDirection = 'like' | 'pass';
 export type VerificationType = 'linkedin' | 'github' | 'domain_email' | 'selfie';

@@ -18,6 +18,28 @@ export function CandidateCard({ candidate }: CandidateCardProps) {
     .toUpperCase()
     .slice(0, 2);
 
+  const getRoleLabel = (seeking?: string) => {
+    switch (seeking) {
+      case 'founder': return 'Founder';
+      case 'cofounder': return 'Cofounder';
+      case 'teammate': return 'Teammate';
+      case 'mentor': return 'Mentor';
+      case 'investor': return 'Investor';
+      default: return 'User';
+    }
+  };
+
+  const getRoleIcon = (seeking?: string) => {
+    switch (seeking) {
+      case 'founder': return 'account';
+      case 'cofounder': return 'account-multiple';
+      case 'teammate': return 'account-group';
+      case 'mentor': return 'school';
+      case 'investor': return 'cash-multiple';
+      default: return 'account';
+    }
+  };
+
   return (
     <View style={styles.card}>
       {/* Avatar Section */}
@@ -32,7 +54,19 @@ export function CandidateCard({ candidate }: CandidateCardProps) {
         </View>
         
         <View style={styles.headerInfo}>
-          <Text style={styles.name}>{user.display_name}</Text>
+          <View style={styles.nameRow}>
+            <Text style={styles.name}>{user.display_name}</Text>
+            {intent?.seeking && (
+              <View style={styles.roleBadge}>
+                <MaterialCommunityIcons 
+                  name={getRoleIcon(intent.seeking) as any} 
+                  size={12} 
+                  color={colors.primary} 
+                />
+                <Text style={styles.roleText}>{getRoleLabel(intent.seeking)}</Text>
+              </View>
+            )}
+          </View>
           <View style={styles.metaRow}>
             <MaterialCommunityIcons name="cake-variant" size={16} color={colors.textSecondary} />
             <Text style={styles.meta}>{user.age_band}</Text>
@@ -273,12 +307,36 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
   },
+  nameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: spacing.xs,
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+  },
   name: {
     fontSize: typography.fontSizes.xl,
     fontFamily: typography.fontFamilies.regular,
     color: colors.text,
-    marginBottom: spacing.xs,
     letterSpacing: -0.5,
+  },
+  roleBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.sm,
+    backgroundColor: colors.primary + '20',
+    borderRadius: borderRadius.full,
+    borderWidth: 1,
+    borderColor: colors.primary,
+  },
+  roleText: {
+    fontSize: typography.fontSizes.xs,
+    fontFamily: typography.fontFamilies.regular,
+    color: colors.primary,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   metaRow: {
     flexDirection: 'row',
